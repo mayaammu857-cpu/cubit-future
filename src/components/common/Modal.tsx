@@ -55,7 +55,7 @@ export const Modal: React.FC<ModalProps> = ({
 
       <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
         <div
-          className={`relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full ${maxWidthClasses[size || maxWidth || 'lg']} border border-slate-200 animate-fade-in`}
+          className={`relative transform overflow-hidden rounded-2xl bg-white text-slate-900 text-left shadow-2xl transition-all sm:my-8 w-full ${maxWidthClasses[size || maxWidth || 'lg']} border border-slate-200 animate-fade-in`}
         >
           {/* Modal Header */}
           <div className="bg-brand-navy px-6 py-5 flex items-center justify-between border-b border-brand-navy-light text-white">
@@ -72,7 +72,7 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
 
           {/* Modal Body */}
-          <div className="px-6 py-6 max-h-[calc(85vh-120px)] overflow-y-auto">{children}</div>
+          <div className="px-6 py-6 max-h-[calc(85vh-120px)] overflow-y-auto text-slate-900">{children}</div>
         </div>
       </div>
     </div>

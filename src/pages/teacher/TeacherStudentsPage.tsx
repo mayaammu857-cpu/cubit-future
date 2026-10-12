@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { teachersApi } from '../../services/api';
 import { Batch } from '../../types';
+import { AssignTaskModal } from '../../components/tasks/AssignTaskModal';
 
 export const TeacherStudentsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ export const TeacherStudentsPage: React.FC = () => {
   const [batchFilter, setBatchFilter] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [taskTargetStudent, setTaskTargetStudent] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -148,13 +151,26 @@ export const TeacherStudentsPage: React.FC = () => {
                   </td>
                   <td className="p-4 font-bold text-white">{s.attendanceRate}%</td>
                   <td className="p-4 text-right">
-                    <button
-                      onClick={() => navigate('/teacher/progress-cards')}
-                      className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs flex items-center gap-1.5 ml-auto transition"
-                    >
-                      <Award className="w-3.5 h-3.5 text-brand-orange" />
-                      <span>View Card</span>
-                    </button>
+                    <div className="flex items-center justify-end gap-2 ml-auto">
+                      <button
+                        onClick={() => {
+                          setTaskTargetStudent(s);
+                          setIsAssignModalOpen(true);
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-brand-orange/20 hover:bg-brand-orange/30 text-brand-orange border border-brand-orange/30 font-bold text-xs flex items-center gap-1.5 transition"
+                        title="Assign Academic Task to Student"
+                      >
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>Assign Task</span>
+                      </button>
+                      <button
+                        onClick={() => navigate('/teacher/progress-cards')}
+                        className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs flex items-center gap-1.5 transition"
+                      >
+                        <Award className="w-3.5 h-3.5 text-brand-orange" />
+                        <span>View Card</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -162,6 +178,19 @@ export const TeacherStudentsPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Assign Task Modal */}
+      <AssignTaskModal
+        isOpen={isAssignModalOpen}
+        onClose={() => {
+          setIsAssignModalOpen(false);
+          setTaskTargetStudent(null);
+        }}
+        preselectedStudentId={taskTargetStudent?.studentId}
+        preselectedStudentName={taskTargetStudent?.name}
+        preselectedBatchId={taskTargetStudent?.batchId}
+        creatorRole="TEACHER"
+      />
     </div>
   );
 };

@@ -143,7 +143,7 @@ export const AdminExams: React.FC = () => {
               setPage(1);
             }}
             placeholder="Search exam by title or medical discipline..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-brand-orange/40"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange transition"
           />
         </div>
 
@@ -154,7 +154,7 @@ export const AdminExams: React.FC = () => {
               setSubjectFilter(e.target.value);
               setPage(1);
             }}
-            className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700"
+            className="w-full py-2.5 px-3 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-brand-orange/40 transition"
           >
             <option value="">All Disciplines</option>
             {subjects.map((sub) => (
@@ -258,7 +258,7 @@ export const AdminExams: React.FC = () => {
               value={formData.examName}
               onChange={(e) => setFormData({ ...formData, examName: e.target.value })}
               placeholder="e.g. Pathology Midterm Block 1"
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40"
+              className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
             />
           </div>
 
@@ -271,7 +271,7 @@ export const AdminExams: React.FC = () => {
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 placeholder="e.g. Pathology"
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40"
+                className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
               />
             </div>
             <div>
@@ -281,7 +281,7 @@ export const AdminExams: React.FC = () => {
                 required
                 value={formData.examDate}
                 onChange={(e) => setFormData({ ...formData, examDate: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40"
+                className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
               />
             </div>
           </div>
@@ -294,7 +294,7 @@ export const AdminExams: React.FC = () => {
                 required
                 value={formData.marksObtained}
                 onChange={(e) => setFormData({ ...formData, marksObtained: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40"
+                className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
               />
             </div>
             <div>
@@ -304,7 +304,7 @@ export const AdminExams: React.FC = () => {
                 required
                 value={formData.maxMarks}
                 onChange={(e) => setFormData({ ...formData, maxMarks: parseInt(e.target.value) || 100 })}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40"
+                className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
               />
             </div>
           </div>

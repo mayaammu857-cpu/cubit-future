@@ -10,9 +10,11 @@ import {
   Send,
   Eye,
   BookOpen,
+  Plus,
 } from 'lucide-react';
 import { tasksApi, batchesApi } from '../../services/api';
 import { TaskAssignment, Batch } from '../../types';
+import { AssignTaskModal } from '../../components/tasks/AssignTaskModal';
 
 export const AdminTasksPage: React.FC = () => {
   const [tasks, setTasks] = useState<TaskAssignment[]>([]);
@@ -21,6 +23,7 @@ export const AdminTasksPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -75,13 +78,23 @@ export const AdminTasksPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={fetchData}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition self-start sm:self-auto"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Ledger</span>
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <button
+            onClick={() => setIsAssignModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-orange to-amber-500 hover:from-amber-500 hover:to-brand-orange text-white text-xs font-bold shadow-lg shadow-brand-orange/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Assign New Task</span>
+          </button>
+
+          <button
+            onClick={fetchData}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh Ledger</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Counters */}
@@ -213,6 +226,13 @@ export const AdminTasksPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+      {/* Assign Task Modal */}
+      <AssignTaskModal
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        onSuccess={fetchData}
+        creatorRole="ADMIN"
+      />
     </div>
   );
 };

@@ -66,7 +66,7 @@ export const CounsellorManagement: React.FC = () => {
         !search ||
         c.name.toLowerCase().includes(q) ||
         c.email.toLowerCase().includes(q) ||
-        c.phone.includes(q);
+        (c.phone && c.phone.includes(q));
       const matchStatus = !statusFilter || c.status === statusFilter;
       return matchSearch && matchStatus;
     });
@@ -171,7 +171,7 @@ export const CounsellorManagement: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search counsellor name, email, or mobile..."
-            className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
+            className="w-full pl-10 pr-4 py-2.5 text-sm font-medium text-slate-900 bg-white border border-slate-200 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange transition"
           />
         </div>
 
@@ -179,7 +179,7 @@ export const CounsellorManagement: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full md:w-auto px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-700"
+            className="w-full md:w-auto px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-orange/40 transition"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -317,7 +317,7 @@ export const CounsellorManagement: React.FC = () => {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g. Priya Sharma"
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40"
+              className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
             />
           </div>
 
@@ -330,7 +330,7 @@ export const CounsellorManagement: React.FC = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="counsellor@cubitfuture.com"
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40"
+                className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
               />
             </div>
             <div>
@@ -341,7 +341,7 @@ export const CounsellorManagement: React.FC = () => {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+91 98222 33445"
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40"
+                className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
               />
             </div>
           </div>
@@ -351,7 +351,7 @@ export const CounsellorManagement: React.FC = () => {
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-orange/40 text-slate-800"
+              className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
             >
               <option value="ACTIVE">ACTIVE</option>
               <option value="INACTIVE">INACTIVE</option>

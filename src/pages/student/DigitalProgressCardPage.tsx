@@ -22,6 +22,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { progressCardApi } from '../../services/api';
 import { DigitalProgressCardData } from '../../types';
+import { AppWatermark } from '../../components/common/AppWatermark';
 
 export const DigitalProgressCardPage: React.FC = () => {
   const { student, user } = useAuth();
@@ -109,6 +110,9 @@ export const DigitalProgressCardPage: React.FC = () => {
         {/* Subtle Decorative Ambient Lighting */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/10 rounded-full blur-[140px] pointer-events-none print:hidden" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none print:hidden" />
+
+        {/* Official Background Security Watermark */}
+        <AppWatermark variant="diagonal" />
 
         {/* ============================================================== */}
         {/* CARD SECTION 1: OFFICIAL ACADEMY HEADER & STUDENT IDENTIFIER   */}
@@ -398,12 +402,20 @@ export const DigitalProgressCardPage: React.FC = () => {
         </div>
 
         {/* Verification Footer & Timestamp */}
-        <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2 print:text-black">
+        <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2 print:text-black relative z-10">
           <p>
             Official Record ID: <span className="font-mono text-slate-400">{sInfo.studentId}-PROG-2026</span>
           </p>
-          <p>
-            Generated on {new Date(cardData.generatedAt).toLocaleString()} IST &bull; Cubit Future Digital Progress Card System
+          <p className="flex items-center gap-1">
+            <span>Generated on {new Date(cardData.generatedAt).toLocaleString()} IST &bull; Verified via</span>
+            <a
+              href="https://loopuniverse.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-red-500 hover:text-red-400 hover:underline font-mono font-bold"
+            >
+              loopuniverse.net
+            </a>
           </p>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AppRoutes } from './routes/AppRoutes';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { AppWatermark } from './components/common/AppWatermark';
 
 export const App: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ export const App: React.FC = () => {
         <NotificationProvider>
           <AuthProvider>
             <AppRoutes />
+            <AppWatermark />
           </AuthProvider>
         </NotificationProvider>
       </BrowserRouter>

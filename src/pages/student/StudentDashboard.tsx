@@ -23,11 +23,13 @@ import {
   CheckCircle2,
   Target,
   Flame,
+  Plus,
 } from 'lucide-react';
 import { NativeTrendChart } from '../../components/common/NativeTrendChart';
 import { useAuth } from '../../context/AuthContext';
 import { examApi, tasksApi } from '../../services/api';
 import { ExamRecord } from '../../types';
+import { StudentCreateSelfTaskModal } from '../../components/tasks/StudentCreateSelfTaskModal';
 
 export const StudentDashboard: React.FC = () => {
   const { student, user } = useAuth();
@@ -54,6 +56,7 @@ export const StudentDashboard: React.FC = () => {
     completionRate: 0,
   });
   const [todayTasksList, setTodayTasksList] = useState<any[]>([]);
+  const [isSelfTaskModalOpen, setIsSelfTaskModalOpen] = useState(false);
 
   // Dynamic user data
   const studentName = student?.name || user?.name || 'Student Candidate';
@@ -63,34 +66,35 @@ export const StudentDashboard: React.FC = () => {
   const batchName = student?.batchName || 'Active Batch';
   const batchType = 'Regular Batch';
 
+  const fetchStudentData = async () => {
+    setLoading(true);
+    try {
+      const [results, taskData] = await Promise.all([
+        examApi.getMyResults().catch(() => []),
+        tasksApi.getStudentTasks(studentId).catch(() => null),
+      ]);
+      setExamResults(results || []);
+      if (taskData) {
+        setTaskSummary(taskData.summary || {
+          total: 0,
+          completed: 0,
+          submitted: 0,
+          inProgress: 0,
+          overdue: 0,
+          needsRevision: 0,
+          completionRate: 0,
+        });
+        setTodayTasksList(taskData.todayTasks || taskData.allTasks?.slice(0, 3) || []);
+      }
+    } catch {
+      setExamResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load real student exam records and assigned tasks
   useEffect(() => {
-    const fetchStudentData = async () => {
-      setLoading(true);
-      try {
-        const [results, taskData] = await Promise.all([
-          examApi.getMyResults().catch(() => []),
-          tasksApi.getStudentTasks(studentId).catch(() => null),
-        ]);
-        setExamResults(results || []);
-        if (taskData) {
-          setTaskSummary(taskData.summary || {
-            total: 0,
-            completed: 0,
-            submitted: 0,
-            inProgress: 0,
-            overdue: 0,
-            needsRevision: 0,
-            completionRate: 0,
-          });
-          setTodayTasksList(taskData.todayTasks || taskData.allTasks?.slice(0, 3) || []);
-        }
-      } catch {
-        setExamResults([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchStudentData();
   }, [studentId]);
 
@@ -511,9 +515,19 @@ export const StudentDashboard: React.FC = () => {
 
           {/* Card 2: Quick Actions */}
           <div className="bg-[#091438] border border-[#162758] rounded-2xl p-5 shadow-lg space-y-3">
-            <h3 className="text-sm font-bold text-white mb-2">
-              Academic Navigation
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold text-white">
+                Academic Navigation
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsSelfTaskModalOpen(true)}
+                className="text-[11px] font-bold text-brand-orange hover:text-white flex items-center gap-1 transition px-2 py-0.5 rounded-lg hover:bg-white/5 border border-brand-orange/30"
+              >
+                <Plus className="w-3 h-3" />
+                <span>+ Add Goal</span>
+              </button>
+            </div>
 
             <button
               onClick={() => navigate('/student/tasks')}
@@ -657,6 +671,15 @@ export const StudentDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Student Self-Task Modal */}
+      <StudentCreateSelfTaskModal
+        isOpen={isSelfTaskModalOpen}
+        onClose={() => setIsSelfTaskModalOpen(false)}
+        onSuccess={fetchStudentData}
+        studentId={studentId}
+        studentName={studentName}
+      />
     </div>
   );
 };

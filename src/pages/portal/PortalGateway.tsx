@@ -314,7 +314,15 @@ export const PortalGateway: React.FC = () => {
       {/* Footer */}
       <footer className="relative z-10 max-w-7xl mx-auto w-full pt-6 border-t border-[#15234A] text-center sm:text-left flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
         <div>
-          &copy; 2026 <span className="font-bold text-white">Cubit Future Academy</span>. Digital Progress Card &amp; Study Plan Ecosystem.
+          &copy; 2026 <span className="font-bold text-white">Cubit Future Academy</span> &bull; Powered by{' '}
+          <a
+            href="https://loopuniverse.net"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-red-500 hover:text-red-400 hover:underline font-mono font-bold"
+          >
+            loopuniverse.net
+          </a>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <span>Role-Isolated Multi-Portal Architecture</span>

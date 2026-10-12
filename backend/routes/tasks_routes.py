@@ -69,6 +69,9 @@ def create_task(payload: CreateTaskPayload):
         if s_row:
             target_name = s_row["name"]
             target_students.append({"student_id": s_row["student_id"], "name": s_row["name"], "batch_id": s_row["batch_id"]})
+        else:
+            target_name = payload.createdByName or payload.targetId
+            target_students.append({"student_id": payload.targetId, "name": target_name, "batch_id": "BATCH-01"})
     elif payload.studentIds:
         for s_id in payload.studentIds:
             cursor.execute("SELECT student_id, name, batch_id FROM students WHERE student_id = ? OR id = ?", (s_id, s_id))

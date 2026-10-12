@@ -17,12 +17,14 @@ import {
   Sparkles,
   ChevronRight,
   BookOpen,
+  Plus,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { tasksApi } from '../../services/api';
 import { TaskAssignment, TaskAssignmentStatus, TaskPriority } from '../../types';
 import { Modal } from '../../components/common/Modal';
+import { StudentCreateSelfTaskModal } from '../../components/tasks/StudentCreateSelfTaskModal';
 
 export const StudentTasksPage: React.FC = () => {
   const { student, user } = useAuth();
@@ -60,6 +62,7 @@ export const StudentTasksPage: React.FC = () => {
   // Selected Task Modal State
   const [selectedTask, setSelectedTask] = useState<TaskAssignment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSelfTaskModalOpen, setIsSelfTaskModalOpen] = useState(false);
 
   // Form State for Update / Submit
   const [studyMins, setStudyMins] = useState<number>(0);
@@ -266,17 +269,27 @@ export const StudentTasksPage: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-black text-white">My Academic Tasks</h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Daily study targets, problem sets, and assignments assigned by faculty mentor
+            Daily study targets, problem sets, and self-study goals assigned by faculty or set by you
           </p>
         </div>
 
-        <button
-          onClick={fetchTasks}
-          className="self-start sm:self-auto flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Tasks</span>
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <button
+            onClick={() => setIsSelfTaskModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-orange to-amber-500 hover:from-amber-500 hover:to-brand-orange text-white text-xs font-bold shadow-lg shadow-brand-orange/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Add Personal Task</span>
+          </button>
+
+          <button
+            onClick={fetchTasks}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Task Statistics Summary Bar */}
@@ -379,9 +392,16 @@ export const StudentTasksPage: React.FC = () => {
               <div className="space-y-3">
                 {/* Header: Subject & Priority */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-bold text-brand-orange uppercase tracking-wider truncate">
-                    {t.subject}
-                  </span>
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="text-[11px] font-bold text-brand-orange uppercase tracking-wider truncate">
+                      {t.subject}
+                    </span>
+                    {(t.createdByName?.includes('Self') || t.createdByName === 'Self-Study Plan') && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 flex items-center gap-1 flex-shrink-0">
+                        <Sparkles className="w-2.5 h-2.5" /> Self-Goal
+                      </span>
+                    )}
+                  </div>
                   {getPriorityBadge(t.priority)}
                 </div>
 
@@ -628,6 +648,15 @@ export const StudentTasksPage: React.FC = () => {
           </div>
         </Modal>
       )}
+
+      {/* Student Self-Task Creation Modal */}
+      <StudentCreateSelfTaskModal
+        isOpen={isSelfTaskModalOpen}
+        onClose={() => setIsSelfTaskModalOpen(false)}
+        onSuccess={fetchTasks}
+        studentId={studentId}
+        studentName={student?.name || user?.name}
+      />
     </div>
   );
 };
