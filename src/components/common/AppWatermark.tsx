@@ -1,5 +1,4 @@
 import React from 'react';
-import { ExternalLink } from 'lucide-react';
 
 interface AppWatermarkProps {
   variant?: 'global' | 'floating' | 'inline' | 'diagonal' | 'pattern';
@@ -78,35 +77,11 @@ export const AppWatermark: React.FC<AppWatermarkProps> = ({
     );
   }
 
-  // Floating Badge Component (Interactive, fixed, glowing, high z-index)
-  const floatingBadge = (
-    <div
-      className={`fixed bottom-3.5 left-4 sm:left-6 z-[99999] select-none print:hidden pointer-events-auto transition-transform duration-200 hover:scale-105 ${className}`}
-    >
-      <a
-        href="https://loopuniverse.net"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#100406]/92 hover:bg-[#1e0509] backdrop-blur-md border border-red-500/40 hover:border-red-500 text-[11px] font-mono font-medium text-red-200 hover:text-white transition-all shadow-xl shadow-red-950/40 hover:shadow-[0_0_22px_rgba(239,68,68,0.55)] group"
-        title="Verified & Secured by loopuniverse.net"
-      >
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_8px_#ef4444]" />
-        </span>
-        <span className="tracking-wider bg-gradient-to-r from-red-200 via-rose-100 to-red-300 bg-clip-text text-transparent group-hover:from-white group-hover:to-red-100 font-semibold">
-          loopuniverse.net
-        </span>
-        <ExternalLink className="w-3 h-3 text-red-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-      </a>
-    </div>
-  );
-
   if (variant === 'floating') {
-    return floatingBadge;
+    return null;
   }
 
-  // 4. Default / Global: Full-page repeating SVG watermark across the ENTIRE viewport + floating interactive badge + print watermark
+  // 4. Default / Global: Full-page repeating SVG watermark across the ENTIRE viewport + print watermark
   return (
     <>
       {/* Universal Background Repeating Security Watermark */}
@@ -152,9 +127,6 @@ export const AppWatermark: React.FC<AppWatermarkProps> = ({
           loopuniverse.net
         </span>
       </div>
-
-      {/* Floating Interactive Badge */}
-      {floatingBadge}
     </>
   );
 };
