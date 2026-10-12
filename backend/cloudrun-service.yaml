@@ -1,0 +1,49 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: cubit-future-backend
+  namespace: massive-acrobat-511306-j3
+  labels:
+    cloud.googleapis.com/location: asia-south1
+  annotations:
+    run.googleapis.com/launch-stage: GA
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '0'
+        autoscaling.knative.dev/maxScale: '5'
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: cubit-sheets-bot@massive-acrobat-511306-j3.iam.gserviceaccount.com
+      containers:
+        - image: gcr.io/massive-acrobat-511306-j3/cubit-future-backend:latest
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          env:
+            - name: PORT
+              value: '8080'
+            - name: GOOGLE_DRIVE_FOLDER_ID
+              value: '1j9mdfTPvHG_OhAFsMLVWUoD6qH3PkXR1'
+            - name: GOOGLE_MASTER_SPREADSHEET_ID
+              value: '1iqRsoh_H6_5NOW5-gjsvr0NiNV7mRDK_aVXcXtdRG3U'
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30

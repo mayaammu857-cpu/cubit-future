@@ -1,0 +1,19 @@
+# Ignore backend from Vercel deployments (Backend is hosted on Google Cloud Run)
+backend/
+supabase/
+
+# Credentials & Service accounts
+massive-acrobat-*.json
+service_account*.json
+*.json.key
+
+# Python environments & cache
+__pycache__/
+*.py
+*.pyc
+.venv/
+venv/
+ENV/
+
+# Markdown documentation
+*.md
