@@ -278,6 +278,81 @@ export const StudentDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* AI Academic Co-Pilot Suite Quick Actions */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#110a30] via-[#1a104a] to-[#0c0824] p-5 sm:p-6 border border-purple-500/30 shadow-xl">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                  <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
+                  <span>AI Academic Suite</span>
+                </div>
+                <h3 className="text-lg font-bold text-white tracking-tight">
+                  Supercharge Your Prep with 24/7 AI Tools
+                </h3>
+                <p className="text-xs text-slate-300">
+                  Instant step-by-step doubt resolution, weak topic diagnostics, and 2-minute lecture summarization.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Tool 1 */}
+              <button
+                type="button"
+                onClick={() => navigate('/student/ai-tutor')}
+                className="p-4 rounded-2xl bg-[#091438]/80 hover:bg-[#0d1e52] border border-purple-500/20 hover:border-purple-400 text-left transition group shadow-md"
+              >
+                <div className="w-9 h-9 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <h4 className="text-xs font-bold text-white flex items-center justify-between">
+                  <span>24/7 AI Doubt Solver</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                  Ask textbook questions, upload photos & get derivations.
+                </p>
+              </button>
+
+              {/* Tool 2 */}
+              <button
+                type="button"
+                onClick={() => navigate('/student/knowledge-radar')}
+                className="p-4 rounded-2xl bg-[#091438]/80 hover:bg-[#0d1e52] border border-purple-500/20 hover:border-purple-400 text-left transition group shadow-md"
+              >
+                <div className="w-9 h-9 rounded-xl bg-rose-600/20 text-rose-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                  <Target className="w-4 h-4" />
+                </div>
+                <h4 className="text-xs font-bold text-white flex items-center justify-between">
+                  <span>Knowledge Gap Radar</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                  Find where marks are leaking & get recovery drills.
+                </p>
+              </button>
+
+              {/* Tool 3 */}
+              <button
+                type="button"
+                onClick={() => navigate('/student/summarizer')}
+                className="p-4 rounded-2xl bg-[#091438]/80 hover:bg-[#0d1e52] border border-purple-500/20 hover:border-purple-400 text-left transition group shadow-md"
+              >
+                <div className="w-9 h-9 rounded-xl bg-sky-600/20 text-sky-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <h4 className="text-xs font-bold text-white flex items-center justify-between">
+                  <span>Lecture Summarizer</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                  Turn video & audio into 2-min notes & instant recall quiz.
+                </p>
+              </button>
+            </div>
+          </div>
+
           {/* 3. Analytics Charts Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
             {/* Chart 1: Performance Overview */}

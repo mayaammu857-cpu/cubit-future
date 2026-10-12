@@ -10,6 +10,8 @@ import {
   X,
   LogOut,
   Sparkles,
+  Target,
+  FileText,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -33,6 +35,15 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, onClose 
     { label: 'Digital Study Plan', path: '/student/study-plan', icon: BookOpen },
     { label: 'Digital Progress Card', path: '/student/progress-card', icon: Award },
     { label: 'My Marks & Tests', path: '/student/results', icon: BarChart3 },
+  ];
+
+  const aiNavItems = [
+    { label: 'AI Doubt Solver', path: '/student/ai-tutor', icon: Sparkles, badge: '24/7' },
+    { label: 'Knowledge Gap Radar', path: '/student/knowledge-radar', icon: Target, badge: 'AI' },
+    { label: 'Lecture Summarizer', path: '/student/summarizer', icon: FileText, badge: 'Notes' },
+  ];
+
+  const accountNavItems = [
     { label: 'Student Profile', path: '/student/profile', icon: User },
   ];
 
@@ -52,9 +63,9 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, onClose 
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div>
+        <div className="overflow-y-auto flex-1">
           {/* Brand Header */}
-          <div className="h-20 px-6 flex items-center justify-between border-b border-[#111c3d]/60">
+          <div className="h-20 px-6 flex items-center justify-between border-b border-[#111c3d]/60 sticky top-0 bg-[#060b1d] z-10">
             <div className="flex items-center gap-3">
               <img
                 src="/cubit_future_logo.png"
@@ -74,7 +85,11 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, onClose 
           </div>
 
           {/* Navigation Items */}
-          <nav className="px-3.5 py-6 space-y-1.5">
+          <nav className="px-3.5 py-4 space-y-1">
+            {/* Academic Core */}
+            <div className="px-3 py-1.5 text-[10px] font-extrabold tracking-wider uppercase text-slate-500">
+              Academic Hub
+            </div>
             {studentNavItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -84,7 +99,87 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, onClose 
                   end={item.path === '/student/dashboard'}
                   onClick={() => onClose()}
                   className={({ isActive }) =>
-                    `flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                    `flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group ${
+                      isActive
+                        ? 'bg-gradient-to-r from-brand-orange to-[#FF7700] text-white shadow-lg shadow-brand-orange/25 font-semibold'
+                        : 'text-slate-300 hover:text-white hover:bg-white/[0.04]'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon
+                        className={`w-4 h-4 transition-colors flex-shrink-0 ${
+                          isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
+                        }`}
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+
+            {/* AI Co-Pilot Suite */}
+            <div className="pt-3 px-3 py-1.5 text-[10px] font-extrabold tracking-wider uppercase text-purple-400 flex items-center justify-between">
+              <span>AI Learning Suite</span>
+              <span className="px-1.5 py-0.2 bg-purple-500/20 rounded text-[9px] text-purple-300 border border-purple-500/30 font-mono">
+                PRO
+              </span>
+            </div>
+            {aiNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.label}
+                  to={item.path}
+                  onClick={() => onClose()}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group ${
+                      isActive
+                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30 font-semibold'
+                        : 'text-purple-200/90 hover:text-white hover:bg-purple-950/20'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <div className="flex items-center gap-3 truncate">
+                        <Icon
+                          className={`w-4 h-4 transition-colors flex-shrink-0 ${
+                            isActive ? 'text-white' : 'text-purple-400 group-hover:text-purple-200'
+                          }`}
+                        />
+                        <span className="truncate">{item.label}</span>
+                      </div>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold font-mono ${
+                          isActive
+                            ? 'bg-white/20 text-white'
+                            : 'bg-purple-500/20 text-purple-300'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+
+            {/* Account */}
+            <div className="pt-3 px-3 py-1.5 text-[10px] font-extrabold tracking-wider uppercase text-slate-500">
+              Account
+            </div>
+            {accountNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.label}
+                  to={item.path}
+                  onClick={() => onClose()}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group ${
                       isActive
                         ? 'bg-gradient-to-r from-brand-orange to-[#FF7700] text-white shadow-lg shadow-brand-orange/25 font-semibold'
                         : 'text-slate-300 hover:text-white hover:bg-white/[0.04]'

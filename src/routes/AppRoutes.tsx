@@ -52,6 +52,9 @@ import { DigitalProgressCardPage } from '../pages/student/DigitalProgressCardPag
 import { StudentProfile } from '../pages/student/StudentProfile';
 import { StudentResults } from '../pages/student/StudentResults';
 import { StudentPerformance } from '../pages/student/StudentPerformance';
+import { StudentDoubtSolverPage } from '../pages/student/StudentDoubtSolverPage';
+import { StudentKnowledgeRadarPage } from '../pages/student/StudentKnowledgeRadarPage';
+import { StudentMediaSummarizerPage } from '../pages/student/StudentMediaSummarizerPage';
 
 // Shared System Pages
 import { GoogleSheetsSync } from '../pages/common/GoogleSheetsSync';
@@ -191,9 +194,15 @@ export const AppRoutes: React.FC = () => {
         <Route path="/student/tasks" element={<StudentTasksPage />} />
         <Route path="/student/study-plan" element={<StudentStudyPlanPage />} />
         <Route path="/student/progress-card" element={<DigitalProgressCardPage />} />
-        <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="/student/results" element={<StudentResults />} />
         <Route path="/student/performance" element={<StudentPerformance />} />
+        
+        {/* AI Learning & Academic Suite */}
+        <Route path="/student/ai-tutor" element={<StudentDoubtSolverPage />} />
+        <Route path="/student/knowledge-radar" element={<StudentKnowledgeRadarPage />} />
+        <Route path="/student/summarizer" element={<StudentMediaSummarizerPage />} />
+
+        <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="/student/settings" element={<SettingsPage />} />
       </Route>
 

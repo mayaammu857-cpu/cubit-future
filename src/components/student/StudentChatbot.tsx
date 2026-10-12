@@ -51,10 +51,10 @@ export const StudentChatbot: React.FC = () => {
 
   // Quick suggestion prompts
   const suggestions = [
+    { icon: Sparkles, text: 'What is the 24/7 AI Doubt Solver?' },
     { icon: TrendingUp, text: 'How can I improve my marks to 85%?' },
+    { icon: Lightbulb, text: 'Where are my weak topics in Knowledge Radar?' },
     { icon: Calendar, text: 'When is my next mock exam?' },
-    { icon: GraduationCap, text: 'What is my current batch rank?' },
-    { icon: Lightbulb, text: 'Study tips for General Studies' },
   ];
 
   const scrollToBottom = () => {
@@ -70,6 +70,18 @@ export const StudentChatbot: React.FC = () => {
   // AI Response generator with personalized academic intelligence
   const generateAIResponse = (query: string): string => {
     const q = query.toLowerCase();
+
+    if (q.includes('doubt') || q.includes('tutor') || q.includes('question') || q.includes('solve')) {
+      return `🤖 Need help with a tough problem? Head over to the 'AI Doubt Solver' in your sidebar! You can paste any equation, upload textbook photos, and get step-by-step mathematical proofs 24/7.`;
+    }
+
+    if (q.includes('radar') || q.includes('weak') || q.includes('gap') || q.includes('vulnerability')) {
+      return `🎯 Your Knowledge Gap Radar is live! It highlights that you are leaking marks in Organic Reaction Mechanisms (42%) and Calculus (48%). Sealing these two gaps will boost your score by estimated +12.2%!`;
+    }
+
+    if (q.includes('summarize') || q.includes('lecture') || q.includes('video') || q.includes('notes')) {
+      return `⚡ Use the Lecture Summarizer! Paste YouTube links or upload audio recordings to get 2-minute executive summaries, clickable timestamps, and instant retention quizzes.`;
+    }
 
     if (q.includes('improve') || q.includes('score') || q.includes('marks') || q.includes('increase')) {
       return `To improve your score from 78% to the Excellent Tier (85%+):\n\n1. 🎯 Focus Priority: Your lowest scored subject is 'General Studies' (68%) and 'Maths' (72%).\n2. ⏱️ 30-Min Daily Practice: Practicing 20 previous years' MCQs in English and General Studies will gain you an estimated +7% in your next mock.\n3. 🏆 Rank Impact: A 7% boost will advance you from Rank #12 straight into the Batch Top 5!`;
