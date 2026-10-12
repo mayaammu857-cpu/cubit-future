@@ -188,8 +188,17 @@ export const TeacherLoginPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 max-w-5xl mx-auto w-full text-center text-xs text-slate-500 py-2 border-t border-white/5">
-        &copy; 2026 Cubit Future Academy &bull; Dedicated Role-Isolated Academic Architecture
+      <footer className="relative z-10 max-w-5xl mx-auto w-full text-center text-xs text-slate-500 py-3 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between px-4 gap-2">
+        <span>&copy; 2026 Cubit Future Academy &bull; Dedicated Faculty Console</span>
+        <a
+          href="https://loopuniverse.net"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-slate-400 hover:text-red-400 font-mono transition text-[11px] inline-flex items-center gap-1.5"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span>Powered by loopuniverse.net</span>
+        </a>
       </footer>
     </div>
   );

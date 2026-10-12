@@ -17,6 +17,7 @@ import { useNotifications } from '../../context/NotificationContext';
 import { studentApi } from '../../services/api';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
+import { AppWatermark } from '../../components/common/AppWatermark';
 
 export const StudentProfile: React.FC = () => {
   const { student, refreshStudentData } = useAuth();
@@ -114,23 +115,28 @@ export const StudentProfile: React.FC = () => {
       {/* Main Profile Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: ID Card */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm flex flex-col items-center text-center">
-          <div className="relative mb-4">
+        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm flex flex-col items-center text-center">
+          <AppWatermark variant="diagonal" />
+          <div className="relative z-10 mb-4">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-brand-dark to-brand-navy border-2 border-brand-orange/40 flex items-center justify-center text-3xl font-black text-brand-orange shadow-lg">
               {student?.name?.charAt(0) || 'A'}
             </div>
             <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-5 h-5 rounded-full border-2 border-white ring-1 ring-emerald-300" />
           </div>
 
-          <h2 className="text-xl font-bold text-brand-navy">{student?.name || 'Arjun Kumar'}</h2>
-          <span className="inline-block px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/40 text-brand-orange font-extrabold text-xs tracking-wider my-2">
+          <h2 className="relative z-10 text-xl font-bold text-brand-navy">{student?.name || 'Arjun Kumar'}</h2>
+          <span className="relative z-10 inline-block px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/40 text-brand-orange font-extrabold text-xs tracking-wider my-2">
             {student?.studentId || 'CF-STU-0001'}
           </span>
-          <p className="text-xs text-slate-500 font-medium mb-4">{student?.courseName || 'Enrolled Program'}</p>
+          <p className="relative z-10 text-xs text-slate-500 font-medium mb-4">{student?.courseName || 'Enrolled Program'}</p>
 
-          <div className="w-full pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+          <div className="relative z-10 w-full pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500">Account Status:</span>
             <Badge status={student?.status || 'ACTIVE'} type="studentStatus" />
+          </div>
+
+          <div className="relative z-10 mt-3 pt-3 border-t border-slate-100/60 w-full flex justify-center">
+            <AppWatermark variant="inline" />
           </div>
         </div>
 

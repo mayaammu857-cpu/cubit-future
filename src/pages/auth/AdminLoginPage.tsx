@@ -194,6 +194,16 @@ export const AdminLoginPage: React.FC = () => {
       <footer className="relative z-10 text-center text-xs text-slate-500 py-3 flex flex-col sm:flex-row items-center justify-center gap-3">
         <span>&copy; 2026 Cubit Future Academy • System Architecture v2.4</span>
         <span className="hidden sm:inline">•</span>
+        <a
+          href="https://loopuniverse.net"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-red-400 font-mono transition text-[11px] inline-flex items-center gap-1.5 text-slate-400"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span>loopuniverse.net</span>
+        </a>
+        <span className="hidden sm:inline">•</span>
         <span className="flex items-center gap-1 text-slate-400">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> End-to-End Encrypted Tunnel
         </span>

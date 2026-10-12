@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { AppWatermark } from './AppWatermark';
 
 interface ModalProps {
   isOpen: boolean;
@@ -57,8 +58,11 @@ export const Modal: React.FC<ModalProps> = ({
         <div
           className={`relative transform overflow-hidden rounded-2xl bg-white text-slate-900 text-left shadow-2xl transition-all sm:my-8 w-full ${maxWidthClasses[size || maxWidth || 'lg']} border border-slate-200 animate-fade-in`}
         >
+          {/* Modal Background Watermark */}
+          <AppWatermark variant="diagonal" />
+
           {/* Modal Header */}
-          <div className="bg-brand-navy px-6 py-5 flex items-center justify-between border-b border-brand-navy-light text-white">
+          <div className="relative z-10 bg-brand-navy px-6 py-5 flex items-center justify-between border-b border-brand-navy-light text-white">
             <div>
               <h3 className="text-lg font-bold tracking-tight text-white">{title}</h3>
               {subtitle && <p className="text-xs text-slate-300 mt-0.5">{subtitle}</p>}
@@ -72,7 +76,13 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
 
           {/* Modal Body */}
-          <div className="px-6 py-6 max-h-[calc(85vh-120px)] overflow-y-auto text-slate-900">{children}</div>
+          <div className="relative z-10 px-6 py-6 max-h-[calc(85vh-120px)] overflow-y-auto text-slate-900">{children}</div>
+
+          {/* Modal Footer Watermark */}
+          <div className="relative z-10 px-6 py-2.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+            <span>Cubit Future Academic Suite</span>
+            <AppWatermark variant="inline" />
+          </div>
         </div>
       </div>
     </div>

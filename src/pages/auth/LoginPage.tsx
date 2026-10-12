@@ -283,10 +283,19 @@ export const LoginPage: React.FC = () => {
 
 
           {/* Footer Sub-branding */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center flex flex-col items-center gap-1.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">
               LEARN &nbsp;•&nbsp; PRACTICE &nbsp;•&nbsp; ACHIEVE
             </p>
+            <a
+              href="https://loopuniverse.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] font-mono text-slate-400 hover:text-red-500 transition-colors inline-flex items-center gap-1.5"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span>loopuniverse.net</span>
+            </a>
           </div>
         </div>
       </div>
