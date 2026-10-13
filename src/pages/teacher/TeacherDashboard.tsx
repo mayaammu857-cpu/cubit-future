@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
+  Activity,
   CheckSquare,
   BookOpen,
   Award,
@@ -87,11 +88,18 @@ export const TeacherDashboard: React.FC = () => {
             Welcome back, {user?.name || 'Prof. Sarah Mathews'}
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">
-            Monitor study plans, review student progress submissions, and verify academic task deliverables
+            Monitor study plans, review student progress submissions, and track academic risk telemetry
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => navigate('/teacher/monitoring')}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 hover:text-white text-xs font-bold transition shadow-lg shadow-red-950/20"
+          >
+            <Activity className="w-4 h-4 text-red-400 animate-pulse" />
+            <span>Student Monitoring Hub</span>
+          </button>
           <button
             onClick={() => navigate('/teacher/tasks')}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-orange hover:bg-[#FF7700] text-white text-xs font-bold shadow-lg shadow-brand-orange/25 transition"
@@ -108,6 +116,7 @@ export const TeacherDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
 
       {/* KPI Highlight Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

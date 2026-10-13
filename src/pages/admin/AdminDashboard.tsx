@@ -24,8 +24,10 @@ import {
   Inbox,
   CheckSquare,
   Award,
+  Activity,
 } from 'lucide-react';
 import { NativeTrendChart } from '../../components/common/NativeTrendChart';
+
 import { dashboardOverviewApi, studentApi, auditLogApi } from '../../services/api';
 import { Student, AuditLog } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -238,16 +240,26 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Date Selector Dropdown Button */}
-        <div className="relative">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setDateDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#080E24] hover:bg-[#0D1636] border border-[#16254F] hover:border-[#1E3A8A] text-slate-200 text-xs font-semibold shadow-sm transition"
+            onClick={() => navigate('/admin/student-monitoring')}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 hover:text-white text-xs font-bold transition shadow-lg shadow-purple-950/20"
           >
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span>{selectedDate}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
+            <Activity className="w-4 h-4 text-purple-400 animate-pulse" />
+            <span>Student Monitoring Hub</span>
           </button>
+
+          {/* Date Selector Dropdown Button */}
+          <div className="relative">
+            <button
+              onClick={() => setDateDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#080E24] hover:bg-[#0D1636] border border-[#16254F] hover:border-[#1E3A8A] text-slate-200 text-xs font-semibold shadow-sm transition"
+            >
+              <Calendar className="w-4 h-4 text-slate-400" />
+              <span>{selectedDate}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
+            </button>
+
 
           {dateDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#080E24] border border-[#16254F] shadow-2xl p-1.5 z-40">
@@ -274,6 +286,8 @@ export const AdminDashboard: React.FC = () => {
           )}
         </div>
       </div>
+    </div>
+
 
       {/* 2. Top 4 Stat Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

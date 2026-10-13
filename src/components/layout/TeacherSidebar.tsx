@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Activity,
   CheckSquare,
   BookOpen,
   Users,
@@ -30,11 +31,13 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ isOpen, onClose 
 
   const navItems = [
     { label: 'Faculty Dashboard', path: '/teacher/dashboard', icon: LayoutDashboard },
+    { label: 'Student Monitoring Hub', path: '/teacher/monitoring', icon: Activity },
     { label: 'Task Management & Review', path: '/teacher/tasks', icon: CheckSquare },
     { label: 'Digital Study Plans', path: '/teacher/study-plans', icon: BookOpen },
     { label: 'My Students & Batches', path: '/teacher/students', icon: Users },
     { label: 'Digital Progress Cards', path: '/teacher/progress-cards', icon: Award },
   ];
+
 
   return (
     <>

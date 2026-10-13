@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Home,
   Users,
+  Activity,
   GraduationCap,
   Layers,
   Boxes,
@@ -35,6 +36,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
   const navItems = [
     { label: 'Admin Overview', path: '/admin/dashboard', icon: Home },
     { label: 'Student Accounts', path: '/admin/students', icon: Users },
+    { label: 'Student Monitoring Hub', path: '/admin/student-monitoring', icon: Activity },
     { label: 'Faculty & Teachers', path: '/admin/teachers', icon: GraduationCap },
     { label: 'Courses & Programs', path: '/admin/courses', icon: Layers },
     { label: 'Batches Management', path: '/admin/batches', icon: Boxes },
@@ -43,6 +45,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
     { label: 'Google Sheets Sync', path: '/admin/google-sheets', icon: FileSpreadsheet },
     { label: 'Security & Audit Logs', path: '/admin/audit-logs', icon: ShieldAlert },
   ];
+
 
   return (
     <>

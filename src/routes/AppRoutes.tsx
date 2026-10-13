@@ -43,6 +43,8 @@ import { TeacherTasksPage } from '../pages/teacher/TeacherTasksPage';
 import { TeacherStudyPlansPage } from '../pages/teacher/TeacherStudyPlansPage';
 import { TeacherStudentsPage } from '../pages/teacher/TeacherStudentsPage';
 import { TeacherProgressCardsPage } from '../pages/teacher/TeacherProgressCardsPage';
+import { TeacherStudentMonitoringPage } from '../pages/teacher/TeacherStudentMonitoringPage';
+import { AdminStudentMonitoringPage } from '../pages/admin/AdminStudentMonitoringPage';
 
 // Student Pages
 import { StudentDashboard } from '../pages/student/StudentDashboard';
@@ -209,6 +211,7 @@ export const AppRoutes: React.FC = () => {
       {/* 4. TEACHER / FACULTY PORTAL — Strictly Isolated */}
       <Route element={<TeacherRouteGuard />}>
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+        <Route path="/teacher/monitoring" element={<TeacherStudentMonitoringPage />} />
         <Route path="/teacher/tasks" element={<TeacherTasksPage />} />
         <Route path="/teacher/study-plans" element={<TeacherStudyPlansPage />} />
         <Route path="/teacher/students" element={<TeacherStudentsPage />} />
@@ -224,6 +227,9 @@ export const AppRoutes: React.FC = () => {
         <Route path="/admin/superadmin" element={<SuperAdminPanel />} />
         <Route path="/superadmin" element={<SuperAdminPanel />} />
 
+        {/* Student Monitoring & Oversight Command Center */}
+        <Route path="/admin/student-monitoring" element={<AdminStudentMonitoringPage />} />
+
         {/* Faculty & Teachers Management */}
         <Route path="/admin/teachers" element={<AdminTeachers />} />
 
@@ -233,6 +239,7 @@ export const AppRoutes: React.FC = () => {
 
         {/* Management Module */}
         <Route path="/admin/students" element={<AdminStudents />} />
+
         <Route path="/admin/admins" element={<AdminAccounts />} />
         <Route path="/admin/counsellors" element={<CounsellorManagement />} />
         <Route path="/admin/courses" element={<AdminCourses />} />
