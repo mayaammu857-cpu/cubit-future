@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User, Role, Student } from '../types';
+import { User, Role, Student, Teacher } from '../types';
 import { authApi, studentApi, getIsDemoMode, setIsDemoMode as setStoredDemoMode } from '../services/api';
 import { defaultDemoUsers, mockStudents } from '../data/mockData';
 
 interface AuthContextType {
   user: User | null;
   student: Student | null;
+  teacher: Teacher | null;
   role: Role | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -31,6 +32,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [student, setStudent] = useState<Student | null>(null);
+  const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDemoMode, setIsDemoModeState] = useState<boolean>(getIsDemoMode());
 
@@ -59,15 +61,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (savedRole === 'SUPER_ADMIN') {
             setUser(defaultDemoUsers.superadmin);
             setStudent(null);
+            setTeacher(null);
           } else if (savedRole === 'ADMIN') {
             setUser(defaultDemoUsers.admin);
             setStudent(null);
+            setTeacher(null);
           } else if (savedRole === 'TEACHER') {
-            setUser(defaultDemoUsers.teacher);
+            const rawTeacher = localStorage.getItem('cf_teacher_data');
+            let parsedTeacher: Teacher | null = null;
+            if (rawTeacher) {
+              try {
+                parsedTeacher = JSON.parse(rawTeacher);
+              } catch {}
+            }
+            if (parsedTeacher) {
+              setUser({
+                ...defaultDemoUsers.teacher,
+                id: parsedTeacher.userId || parsedTeacher.id,
+                name: parsedTeacher.name,
+                email: parsedTeacher.email,
+              });
+              setTeacher(parsedTeacher);
+            } else {
+              setUser(defaultDemoUsers.teacher);
+              setTeacher({
+                id: 'tch-001',
+                userId: 'user-tch-001',
+                name: defaultDemoUsers.teacher.name,
+                email: defaultDemoUsers.teacher.email,
+                assignedBatches: ['batch-01', 'batch-02'],
+                assignedCourses: ['crs-01'],
+                specialization: 'Quantitative Aptitude & Financial Reasoning',
+                status: 'ACTIVE',
+              });
+            }
             setStudent(null);
           } else if (savedRole === 'COUNSELLOR') {
             setUser(defaultDemoUsers.counsellor);
             setStudent(null);
+            setTeacher(null);
           } else {
             try {
               const stuData = await studentApi.getMe();
@@ -78,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: stuData.email,
               });
               setStudent(stuData);
+              setTeacher(null);
               if (stuData?.id) {
                 localStorage.setItem('cf_current_student_id', stuData.id);
               }
@@ -91,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: fallbackStudent.email,
               });
               setStudent(fallbackStudent);
+              setTeacher(null);
               localStorage.setItem('cf_current_student_id', fallbackStudent.id);
             }
           }
@@ -98,11 +132,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Default unauthenticated on clean start
           setUser(null);
           setStudent(null);
+          setTeacher(null);
         }
       } catch (err) {
         console.error('Auth initialization error:', err);
         setUser(null);
         setStudent(null);
+        setTeacher(null);
       } finally {
         setIsLoading(false);
       }
@@ -122,12 +158,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.user.role === 'STUDENT') {
         const stuData = res.student || (await studentApi.getMe());
         setStudent(stuData);
+        setTeacher(null);
         if (stuData?.id) {
           localStorage.setItem('cf_current_student_id', stuData.id);
         }
-      } else {
+        localStorage.removeItem('cf_teacher_data');
+      } else if (res.user.role === 'TEACHER') {
         setStudent(null);
         localStorage.removeItem('cf_current_student_id');
+        const teacherData: Teacher = (res as any).teacher || {
+          id: res.user.id.startsWith('tch-') ? res.user.id : `tch-${res.user.id.replace('user-tch-', '')}`,
+          userId: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+          phone: res.user.phone || '',
+          assignedBatches: ['batch-01', 'batch-02'],
+          assignedCourses: ['crs-01'],
+          specialization: 'Faculty Mentor',
+          status: 'ACTIVE',
+        };
+        setTeacher(teacherData);
+        localStorage.setItem('cf_teacher_data', JSON.stringify(teacherData));
+      } else {
+        setStudent(null);
+        setTeacher(null);
+        localStorage.removeItem('cf_current_student_id');
+        localStorage.removeItem('cf_teacher_data');
       }
       return res.user;
     } finally {
@@ -185,8 +241,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('cf_auth_token');
     localStorage.removeItem('cf_user_role');
     localStorage.removeItem('cf_current_student_id');
+    localStorage.removeItem('cf_teacher_data');
     setUser(null);
     setStudent(null);
+    setTeacher(null);
   };
 
   return (
@@ -194,6 +252,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         student,
+        teacher,
         role: user?.role || null,
         isAuthenticated: Boolean(user),
         isLoading,

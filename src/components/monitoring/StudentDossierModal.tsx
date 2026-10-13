@@ -25,6 +25,7 @@ import { StudentMonitoringMetric } from '../../types/monitoring';
 import { monitoringApi } from '../../services/monitoringApi';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
+import { StudentDetailDashboardModal } from '../students/StudentDetailDashboardModal';
 
 interface StudentDossierModalProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export const StudentDossierModal: React.FC<StudentDossierModalProps> = ({
   const [newNote, setNewNote] = useState('');
   const [notePriority, setNotePriority] = useState<'NORMAL' | 'URGENT'>('NORMAL');
   const [savingNote, setSavingNote] = useState(false);
+  const [isDetailDashboardOpen, setIsDetailDashboardOpen] = useState(false);
 
   if (!isOpen || !metric) return null;
 
@@ -370,11 +372,20 @@ export const StudentDossierModal: React.FC<StudentDossierModalProps> = ({
           {activeTab === 'ACADEMICS' && (
             <div className="space-y-5">
               <div className="p-4 rounded-2xl bg-[#0A1338] border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h4 className="font-bold text-white text-xs">Assessment Score Trajectory (Last 5 Mocks)</h4>
-                  <span className="text-[11px] text-slate-400 font-mono">
-                    Latest: <strong className="text-brand-orange">{metric.academics.latestScore}%</strong>
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      Latest: <strong className="text-brand-orange">{metric.academics.latestScore}%</strong>
+                    </span>
+                    <button
+                      onClick={() => setIsDetailDashboardOpen(true)}
+                      className="px-3 py-1.5 rounded-xl bg-brand-orange hover:bg-[#e55f00] text-white text-xs font-bold flex items-center gap-1.5 transition shadow"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Add Marks / Full Records</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Visual Sparkline representation */}
@@ -615,6 +626,18 @@ export const StudentDossierModal: React.FC<StudentDossierModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Student Academic Dashboard & Marks Manager */}
+      <StudentDetailDashboardModal
+        isOpen={isDetailDashboardOpen}
+        onClose={() => {
+          setIsDetailDashboardOpen(false);
+          onRefresh();
+        }}
+        student={student}
+        onStudentUpdated={() => onRefresh()}
+        userRole={user?.role === 'TEACHER' ? 'TEACHER' : 'ADMIN'}
+      />
     </div>
   );
 };

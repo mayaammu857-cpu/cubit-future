@@ -1114,12 +1114,20 @@ export const studentApi = {
     address?: string;
     bloodGroup?: string;
     dateOfBirth?: string;
+    password?: string;
   }): Promise<Student> {
     if (!getIsDemoMode()) {
       try {
         const res = await apiClient.post('/students', data);
         if (res.data) {
           const createdStudent = res.data;
+          const studentPass = data.password || 'student123';
+          createdStudent.password = studentPass;
+          persistPassword(createdStudent.studentId, studentPass);
+          persistPassword(createdStudent.email, studentPass);
+          const cleanDigits = createdStudent.phone?.replace(/\D/g, '').slice(-10);
+          if (cleanDigits) persistPassword(cleanDigits, studentPass);
+
           currentStudentsList = [
             createdStudent,
             ...currentStudentsList.filter((s) => s.id !== createdStudent.id && s.studentId !== createdStudent.studentId),
@@ -1265,7 +1273,14 @@ export const studentApi = {
     return newStudent;
   },
 
-  async update(id: string, updates: Partial<Student>): Promise<Student> {
+  async update(id: string, updates: Partial<Student> & { password?: string }): Promise<Student> {
+    if (updates.password) {
+      persistPassword(id, updates.password);
+      const cleanDigits = updates.phone?.replace(/\D/g, '').slice(-10);
+      if (cleanDigits) persistPassword(cleanDigits, updates.password);
+      if (updates.email) persistPassword(updates.email, updates.password);
+    }
+
     if (!getIsDemoMode()) {
       try {
         const res = await apiClient.patch(`/students/${id}`, updates);
@@ -1280,6 +1295,12 @@ export const studentApi = {
     if (index === -1) throw new Error('Student not found');
 
     const updated = { ...currentStudentsList[index], ...updates };
+    if (updates.password) {
+      persistPassword(updated.studentId, updates.password);
+      persistPassword(updated.email, updates.password);
+      const cleanDigits = updated.phone?.replace(/\D/g, '').slice(-10);
+      if (cleanDigits) persistPassword(cleanDigits, updates.password);
+    }
     currentStudentsList[index] = updated;
     persistStudents(currentStudentsList);
 
@@ -1474,6 +1495,30 @@ export const examApi = {
     }
     if (!getIsDemoMode()) {
       try {
+        const res = await apiClient.get(`/academic/exams/${studentId}`);
+        const list = res.data?.exams || (Array.isArray(res.data) ? res.data : []);
+        if (list.length > 0) {
+          return list.map((r: any) => ({
+            id: r.id,
+            examId: r.id,
+            studentId: r.studentId,
+            examName: r.examName,
+            subject: r.subject,
+            marksObtained: Number(r.marksObtained),
+            maxMarks: Number(r.maxMarks),
+            totalMarks: Number(r.maxMarks),
+            percentage: Number(r.percentage),
+            examDate: r.examDate,
+            resultStatus: r.resultStatus,
+            status: Number(r.percentage) >= 85 ? 'Excellent' : Number(r.percentage) >= 70 ? 'Good' : 'Average',
+            timeTakenMinutes: 45,
+            durationMinutes: 60,
+            accuracy: 85,
+            studentName: r.batchName || '',
+          }));
+        }
+      } catch {}
+      try {
         const res = await apiClient.get(`/students/${studentId}/results`);
         if (res.data && res.data.length > 0) return res.data;
       } catch (err) {
@@ -1556,10 +1601,36 @@ export const examApi = {
         console.warn('Supabase submitExamRecord note:', err);
       }
     }
+    try {
+      await apiClient.post('/academic/exams', {
+        studentId: data.studentId,
+        examName: newRecord.examName,
+        subject: newRecord.subject,
+        marksObtained: newRecord.marksObtained,
+        maxMarks: newRecord.maxMarks,
+        examDate: newRecord.examDate,
+        batchName: data.studentName || data.batchName,
+      });
+    } catch (err) {
+      console.warn('Backend academic/exams submit note:', err);
+    }
     const list = getStoredExams();
     const updated = [newRecord, ...list];
     persistExams(updated);
-    await auditLogApi.log('Recorded Exam Assessment', `Exam: ${newRecord.examName} (${newRecord.subject})`, 'SUCCESS');
+
+    if (newRecord.studentId) {
+      const students = getStoredStudents();
+      const stuIndex = students.findIndex((s) => s.studentId === newRecord.studentId || s.id === newRecord.studentId);
+      if (stuIndex !== -1) {
+        const studentExams = updated.filter((e) => e.studentId === newRecord.studentId);
+        const avgScore = Math.round((studentExams.reduce((sum, e) => sum + (e.percentage || 0), 0) / studentExams.length) * 10) / 10;
+        students[stuIndex].averageScore = avgScore;
+        students[stuIndex].totalExamsAttempted = studentExams.length;
+        persistStudents(students);
+      }
+    }
+
+    await auditLogApi.log('Recorded Exam Assessment', `Exam: ${newRecord.examName} (${newRecord.subject}) for ${newRecord.studentId}`, 'SUCCESS');
     return newRecord;
   },
 
@@ -1569,12 +1640,33 @@ export const examApi = {
         await supabase.from('exam_records').delete().eq('id', id);
       } catch {}
     }
+    try {
+      await apiClient.delete(`/academic/exams/${id}`);
+    } catch (err) {
+      console.warn('Backend academic/exams delete note:', err);
+    }
     const list = getStoredExams();
+    const target = list.find((e) => e.id === id);
     const updated = list.filter((e) => e.id !== id);
     persistExams(updated);
+
+    if (target?.studentId) {
+      const students = getStoredStudents();
+      const stuIndex = students.findIndex((s) => s.studentId === target.studentId || s.id === target.studentId);
+      if (stuIndex !== -1) {
+        const studentExams = updated.filter((e) => e.studentId === target.studentId);
+        const avgScore = studentExams.length > 0 ? Math.round((studentExams.reduce((sum, e) => sum + (e.percentage || 0), 0) / studentExams.length) * 10) / 10 : 0;
+        students[stuIndex].averageScore = avgScore;
+        students[stuIndex].totalExamsAttempted = studentExams.length;
+        persistStudents(students);
+      }
+    }
+
     return { success: true };
   },
 };
+
+export const examsApi = examApi;
 
 export const batchApi = {
   async getAll(): Promise<Batch[]> {

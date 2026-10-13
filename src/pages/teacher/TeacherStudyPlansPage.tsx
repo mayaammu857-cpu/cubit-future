@@ -18,8 +18,9 @@ import { StudyPlan, Batch, Course } from '../../types';
 import { Modal } from '../../components/common/Modal';
 
 export const TeacherStudyPlansPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, teacher } = useAuth();
   const { addNotification } = useNotifications();
+  const teacherId = teacher?.id || user?.id || 'tch-001';
 
   const [plans, setPlans] = useState<StudyPlan[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -37,7 +38,7 @@ export const TeacherStudyPlansPage: React.FC = () => {
     try {
       const [pRes, bRes, cRes] = await Promise.all([
         studyPlansApi.listPlans(),
-        teachersApi.getTeacherBatches('tch-001'),
+        teachersApi.getTeacherBatches(teacherId),
         coursesApi.getAll(),
       ]);
       setPlans(pRes.plans || []);

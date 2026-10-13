@@ -27,8 +27,9 @@ import { TaskAssignment, Batch, TaskType, TaskPriority } from '../../types';
 import { Modal } from '../../components/common/Modal';
 
 export const TeacherTasksPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, teacher } = useAuth();
   const { addNotification } = useNotifications();
+  const teacherId = teacher?.id || user?.id || 'tch-001';
 
   const [tasks, setTasks] = useState<TaskAssignment[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -79,7 +80,7 @@ export const TeacherTasksPage: React.FC = () => {
           status: statusFilter || undefined,
           subject: subjectFilter || undefined,
         }),
-        teachersApi.getTeacherBatches('tch-001'),
+        teachersApi.getTeacherBatches(teacherId),
         studentApi.getStudents({ limit: 100 }),
       ]);
       setTasks(tRes.tasks || []);

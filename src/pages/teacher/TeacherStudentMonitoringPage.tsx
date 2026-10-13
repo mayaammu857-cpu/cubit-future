@@ -33,8 +33,9 @@ import { StudentDossierModal } from '../../components/monitoring/StudentDossierM
 import { QuickInterventionModal } from '../../components/monitoring/QuickInterventionModal';
 
 export const TeacherStudentMonitoringPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, teacher } = useAuth();
   const { addNotification } = useNotifications();
+  const teacherId = teacher?.id || user?.id || 'tch-001';
 
   const [metrics, setMetrics] = useState<StudentMonitoringMetric[]>([]);
   const [stats, setStats] = useState<MonitoringStats | null>(null);
@@ -60,7 +61,7 @@ export const TeacherStudentMonitoringPage: React.FC = () => {
           riskLevel: riskFilter !== 'ALL' ? riskFilter : undefined,
           search: search || undefined,
         }),
-        teachersApi.getTeacherBatches('tch-001'),
+        teachersApi.getTeacherBatches(teacherId),
       ]);
       setMetrics(res.metrics);
       setStats(res.stats);

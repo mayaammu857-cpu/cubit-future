@@ -8,6 +8,9 @@ import {
   FileSpreadsheet,
   Download,
   Eye,
+  EyeOff,
+  Key,
+  Copy,
   Edit2,
   Trash2,
   Sparkles,
@@ -19,6 +22,8 @@ import {
   BookOpen,
   Layers,
   CheckSquare,
+  Activity,
+  ArrowUpRight,
 } from 'lucide-react';
 import { studentApi, coursesApi, batchesApi } from '../../services/api';
 import { Student, Course, Batch, StudentStatus, GoogleSheetStatus } from '../../types';
@@ -27,6 +32,7 @@ import { Modal } from '../../components/common/Modal';
 import { Pagination } from '../../components/common/Pagination';
 import { useNotifications } from '../../context/NotificationContext';
 import { AssignTaskModal } from '../../components/tasks/AssignTaskModal';
+import { StudentDetailDashboardModal } from '../../components/students/StudentDetailDashboardModal';
 
 export const AdminStudents: React.FC = () => {
   const { addNotification } = useNotifications();
@@ -52,9 +58,17 @@ export const AdminStudents: React.FC = () => {
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [taskTargetStudent, setTaskTargetStudent] = useState<Student | null>(null);
+
+  const handleStudentUpdated = (updatedStu: any) => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === updatedStu.id || s.studentId === updatedStu.studentId ? { ...s, ...updatedStu } : s))
+    );
+    setSelectedStudent(updatedStu);
+  };
 
   // Form State for Add / Edit
   const [formData, setFormData] = useState({
@@ -66,8 +80,23 @@ export const AdminStudents: React.FC = () => {
     guardianName: '',
     guardianPhone: '',
     googleSheetUrl: '',
+    password: '',
     status: 'ACTIVE' as StudentStatus,
   });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleGeneratePassword = () => {
+    const randomPass = 'Stu@' + Math.floor(1000 + Math.random() * 9000);
+    setFormData((prev) => ({ ...prev, password: randomPass }));
+    addNotification('info', `Generated password: ${randomPass}`);
+  };
+
+  const handleCopyCredentials = (stu: Student) => {
+    const pass = stu.password || 'student123';
+    const credText = `*Cubit Future Student Portal Credentials*\nStudent ID: ${stu.studentId}\nName: ${stu.name}\nEmail: ${stu.email}\nPhone: ${stu.phone}\nPortal Password: ${pass}\nPortal Login URL: https://future-six-fawn.vercel.app/login`;
+    navigator.clipboard.writeText(credText);
+    addNotification('success', `Login credentials for ${stu.name} (${stu.studentId}) copied to clipboard!`);
+  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -146,6 +175,7 @@ export const AdminStudents: React.FC = () => {
       guardianName: stu.guardianName || '',
       guardianPhone: stu.guardianPhone || '',
       googleSheetUrl: stu.googleSheetUrl || '',
+      password: stu.password || '',
       status: stu.status,
     });
     setIsAddModalOpen(true);
@@ -168,17 +198,18 @@ export const AdminStudents: React.FC = () => {
           batchName: selectedBatch?.name || 'Regular Batch',
           googleSheetStatus: formData.googleSheetUrl ? 'CONNECTED' : 'DISCONNECTED',
         });
-        addNotification('success', 'Student details updated successfully!');
+        addNotification('success', 'Student details & credentials updated successfully!');
       } else {
         await studentApi.create({
           ...formData,
           courseId,
           batchId,
+          password: formData.password.trim() || 'student123',
           courseName: selectedCourse?.name || 'General Program',
           batchName: selectedBatch?.name || 'Regular Batch',
           googleSheetStatus: 'CONNECTED',
         });
-        addNotification('success', 'Student enrolled and dedicated Google Sheet automatically generated!');
+        addNotification('success', 'Student enrolled with credentials and dedicated Google Sheet generated!');
       }
 
       setIsAddModalOpen(false);
@@ -192,6 +223,7 @@ export const AdminStudents: React.FC = () => {
         guardianName: '',
         guardianPhone: '',
         googleSheetUrl: '',
+        password: '',
         status: 'ACTIVE',
       });
       // Refresh list without crashing if network has delay
@@ -273,6 +305,7 @@ export const AdminStudents: React.FC = () => {
                 guardianName: '',
                 guardianPhone: '',
                 googleSheetUrl: '',
+                password: '',
                 status: 'ACTIVE',
               });
               setIsAddModalOpen(true);
@@ -395,8 +428,30 @@ export const AdminStudents: React.FC = () => {
                 paginatedStudents.map((stu) => (
                   <tr key={stu.id} className="hover:bg-slate-50/60 transition">
                     <td className="py-3.5 px-5">
-                      <div className="font-bold text-slate-900">{stu.name}</div>
-                      <div className="font-mono text-[11px] text-brand-navy font-semibold">{stu.studentId}</div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedStudent(stu);
+                          setIsDashboardModalOpen(true);
+                        }}
+                        className="font-bold text-slate-900 hover:text-brand-orange text-left transition flex items-center gap-1 group"
+                        title="Click to view full student dashboard & manage marks"
+                      >
+                        <span>{stu.name}</span>
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-brand-orange transition" />
+                      </button>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="font-mono text-[11px] text-brand-navy font-semibold">{stu.studentId}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyCredentials(stu)}
+                          title="Copy student login credentials (ID & password)"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold text-brand-navy hover:text-brand-orange bg-slate-100 hover:bg-orange-50 rounded border border-slate-200 hover:border-orange-200 transition"
+                        >
+                          <Key className="w-2.5 h-2.5 text-brand-orange" />
+                          <span>Copy Login</span>
+                        </button>
+                      </div>
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="font-medium text-slate-800">{stu.courseName}</div>
@@ -438,6 +493,17 @@ export const AdminStudents: React.FC = () => {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => {
+                            setSelectedStudent(stu);
+                            setIsDashboardModalOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-brand-navy hover:text-white bg-slate-100 hover:bg-brand-navy rounded-lg transition border border-slate-200"
+                          title="Student Academic Dashboard & Add Marks"
+                        >
+                          <Activity className="w-3.5 h-3.5 text-brand-orange" />
+                          <span>Dashboard & Marks</span>
+                        </button>
+                        <button
+                          onClick={() => {
                             setTaskTargetStudent(stu);
                             setIsAssignModalOpen(true);
                           }}
@@ -449,10 +515,10 @@ export const AdminStudents: React.FC = () => {
                         <button
                           onClick={() => {
                             setSelectedStudent(stu);
-                            setIsViewModalOpen(true);
+                            setIsDashboardModalOpen(true);
                           }}
                           className="p-1.5 text-slate-500 hover:text-brand-navy hover:bg-slate-100 rounded-lg transition"
-                          title="View Details"
+                          title="View Full Profile & Marks"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -602,6 +668,43 @@ export const AdminStudents: React.FC = () => {
             </div>
           </div>
 
+          {/* Student Portal Login Password */}
+          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                <Key className="w-3.5 h-3.5 text-brand-orange" />
+                Student Portal Password (പോർട്ടൽ പാസ്‌വേഡ്) *
+              </label>
+              <button
+                type="button"
+                onClick={handleGeneratePassword}
+                className="text-[11px] font-bold text-brand-orange hover:text-[#e55f00] flex items-center gap-1 transition"
+              >
+                <Sparkles className="w-3 h-3" />
+                Generate Password
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder={editingStudentId ? "Leave blank to keep existing password" : "Enter custom password (or leave blank for student123)"}
+                className="w-full pl-3.5 pr-10 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              The student will use their <strong>Student ID</strong> (or Email) and this <strong>Password</strong> to log into their own personalized student dashboard.
+            </p>
+          </div>
+
           {/* Automatic Google Sheet Integration */}
           <div className="p-3.5 bg-emerald-50/80 border border-emerald-200/70 rounded-xl space-y-1.5">
             <div className="flex items-center justify-between">
@@ -742,6 +845,18 @@ export const AdminStudents: React.FC = () => {
         preselectedStudentName={taskTargetStudent?.name}
         preselectedBatchId={taskTargetStudent?.batchId}
         creatorRole="ADMIN"
+      />
+
+      {/* Comprehensive Student Detail Dashboard & Multi-Time Marks Manager */}
+      <StudentDetailDashboardModal
+        isOpen={isDashboardModalOpen}
+        onClose={() => {
+          setIsDashboardModalOpen(false);
+          setSelectedStudent(null);
+        }}
+        student={selectedStudent}
+        onStudentUpdated={handleStudentUpdated}
+        userRole="ADMIN"
       />
     </div>
   );

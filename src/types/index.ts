@@ -62,6 +62,7 @@ export interface Student {
   attendanceRate: number; // e.g. 94.5
   averageScore: number;   // e.g. 81.2
   totalExamsAttempted: number;
+  password?: string;
 }
 
 export interface Teacher {

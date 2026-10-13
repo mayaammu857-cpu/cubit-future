@@ -25,11 +25,11 @@ import { teachersApi, tasksApi } from '../../services/api';
 import { Batch, Student } from '../../types';
 
 export const TeacherDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, teacher } = useAuth();
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
 
-  const teacherId = 'tch-001';
+  const teacherId = teacher?.id || user?.id || 'tch-001';
 
   const [batches, setBatches] = useState<Batch[]>([]);
   const [students, setStudents] = useState<any[]>([]);

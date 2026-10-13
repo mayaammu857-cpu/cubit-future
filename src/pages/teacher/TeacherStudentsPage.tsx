@@ -13,14 +13,19 @@ import {
   Phone,
   Layers,
   Sparkles,
+  Activity,
+  ArrowUpRight,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { teachersApi } from '../../services/api';
 import { Batch } from '../../types';
 import { AssignTaskModal } from '../../components/tasks/AssignTaskModal';
+import { StudentDetailDashboardModal } from '../../components/students/StudentDetailDashboardModal';
 
 export const TeacherStudentsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, teacher } = useAuth();
+  const teacherId = teacher?.id || user?.id || 'tch-001';
 
   const [students, setStudents] = useState<any[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -29,14 +34,23 @@ export const TeacherStudentsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [taskTargetStudent, setTaskTargetStudent] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false);
+
+  const handleStudentUpdated = (updatedStu: any) => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === updatedStu.id || s.studentId === updatedStu.studentId ? { ...s, ...updatedStu } : s))
+    );
+    setSelectedStudent(updatedStu);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [sRes, bRes] = await Promise.all([
-          teachersApi.getTeacherStudents('tch-001'),
-          teachersApi.getTeacherBatches('tch-001'),
+          teachersApi.getTeacherStudents(teacherId),
+          teachersApi.getTeacherBatches(teacherId),
         ]);
         setStudents(sRes.students || []);
         setBatches(bRes.batches || []);
@@ -45,7 +59,7 @@ export const TeacherStudentsPage: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [teacherId]);
 
   const filteredStudents = students.filter((s) => {
     if (batchFilter && s.batchId !== batchFilter) return false;
@@ -125,8 +139,21 @@ export const TeacherStudentsPage: React.FC = () => {
               filteredStudents.map((s) => (
                 <tr key={s.studentId} className="hover:bg-white/[0.02] transition">
                   <td className="p-4">
-                    <p className="font-bold text-white">{s.name}</p>
-                    <p className="text-[10px] text-slate-400 font-mono">{s.studentId}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedStudent(s);
+                        setIsDashboardModalOpen(true);
+                      }}
+                      className="text-left group"
+                      title="Open Student Dashboard & Enter Marks"
+                    >
+                      <p className="font-bold text-white group-hover:text-brand-orange transition flex items-center gap-1">
+                        <span>{s.name}</span>
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-brand-orange transition" />
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono">{s.studentId}</p>
+                    </button>
                   </td>
                   <td className="p-4">
                     <p className="font-semibold text-white">{s.batchName}</p>
@@ -154,13 +181,24 @@ export const TeacherStudentsPage: React.FC = () => {
                     <div className="flex items-center justify-end gap-2 ml-auto">
                       <button
                         onClick={() => {
+                          setSelectedStudent(s);
+                          setIsDashboardModalOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-brand-orange hover:bg-[#e55f00] text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-brand-orange/20 transition transform hover:-translate-y-0.5"
+                        title="Student Dashboard & Add Marks (ഡാഷ്‌ബോർഡും മാർക്കുകളും)"
+                      >
+                        <Activity className="w-3.5 h-3.5" />
+                        <span>Dashboard & Marks</span>
+                      </button>
+                      <button
+                        onClick={() => {
                           setTaskTargetStudent(s);
                           setIsAssignModalOpen(true);
                         }}
-                        className="px-2.5 py-1.5 rounded-xl bg-brand-orange/20 hover:bg-brand-orange/30 text-brand-orange border border-brand-orange/30 font-bold text-xs flex items-center gap-1.5 transition"
+                        className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10 font-bold text-xs flex items-center gap-1.5 transition"
                         title="Assign Academic Task to Student"
                       >
-                        <CheckSquare className="w-3.5 h-3.5" />
+                        <CheckSquare className="w-3.5 h-3.5 text-brand-orange" />
                         <span>Assign Task</span>
                       </button>
                       <button
@@ -190,6 +228,18 @@ export const TeacherStudentsPage: React.FC = () => {
         preselectedStudentName={taskTargetStudent?.name}
         preselectedBatchId={taskTargetStudent?.batchId}
         creatorRole="TEACHER"
+      />
+
+      {/* Comprehensive Student Detail Dashboard & Multi-Time Marks Manager */}
+      <StudentDetailDashboardModal
+        isOpen={isDashboardModalOpen}
+        onClose={() => {
+          setIsDashboardModalOpen(false);
+          setSelectedStudent(null);
+        }}
+        student={selectedStudent}
+        onStudentUpdated={handleStudentUpdated}
+        userRole="TEACHER"
       />
     </div>
   );

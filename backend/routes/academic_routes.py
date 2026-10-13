@@ -193,4 +193,41 @@ def create_exam_record(payload: CreateExamPayload):
 
     conn.commit()
     conn.close()
-    return {"success": True, "examId": rec_id, "percentage": pct, "resultStatus": status}
+    return {
+        "success": True,
+        "examId": rec_id,
+        "percentage": pct,
+        "resultStatus": status,
+        "averageScore": round(avg_pct or 0.0, 1),
+        "totalExamsAttempted": cnt
+    }
+
+@router.delete("/exams/{exam_id}")
+def delete_exam_record(exam_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT student_id FROM exam_records WHERE id = ?", (exam_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Exam record not found.")
+
+    actual_stu_id = row["student_id"]
+    cursor.execute("DELETE FROM exam_records WHERE id = ?", (exam_id,))
+
+    cursor.execute("SELECT COUNT(*), AVG(percentage) FROM exam_records WHERE student_id = ?", (actual_stu_id,))
+    cnt, avg_pct = cursor.fetchone()
+
+    cursor.execute("""
+    UPDATE students SET total_exams_attempted = ?, average_score = ? WHERE student_id = ?
+    """, (cnt, round(avg_pct or 0.0, 1), actual_stu_id))
+
+    conn.commit()
+    conn.close()
+    return {
+        "success": True,
+        "message": "Exam record deleted successfully.",
+        "averageScore": round(avg_pct or 0.0, 1),
+        "totalExamsAttempted": cnt
+    }

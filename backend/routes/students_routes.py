@@ -71,6 +71,7 @@ class StudentUpdatePayload(BaseModel):
     dateOfBirth: Optional[str] = None
     googleSheetUrl: Optional[str] = None
     googleSheetStatus: Optional[str] = None
+    password: Optional[str] = None
 
 @router.get("")
 def get_students(
@@ -355,6 +356,9 @@ def update_student(student_id: str, payload: StudentUpdatePayload):
         if payload.phone:
             user_updates.append("phone = ?")
             user_params.append(payload.phone.strip())
+        if payload.password and payload.password.strip():
+            user_updates.append("password_hash = ?")
+            user_params.append(payload.password.strip())
         if user_updates:
             user_params.append(user_id)
             cursor.execute(f"UPDATE users SET {', '.join(user_updates)} WHERE id = ?", user_params)
