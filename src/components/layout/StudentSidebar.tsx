@@ -12,6 +12,7 @@ import {
   Sparkles,
   Target,
   FileText,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -31,6 +32,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, onClose 
 
   const studentNavItems = [
     { label: 'Student Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
+    { label: 'Question Bank Practice', path: '/student/question-bank', icon: HelpCircle },
     { label: 'My Tasks', path: '/student/tasks', icon: CheckSquare },
     { label: 'Digital Study Plan', path: '/student/study-plan', icon: BookOpen },
     { label: 'Digital Progress Card', path: '/student/progress-card', icon: Award },

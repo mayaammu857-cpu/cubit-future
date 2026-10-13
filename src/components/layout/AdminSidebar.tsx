@@ -15,6 +15,7 @@ import {
   X,
   Crown,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -39,6 +40,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
     { label: 'Student Monitoring Hub', path: '/admin/student-monitoring', icon: Activity },
     { label: 'Faculty & Teachers', path: '/admin/teachers', icon: GraduationCap },
     { label: 'Courses & Programs', path: '/admin/courses', icon: Layers },
+    { label: 'Exam Question Bank', path: '/admin/question-bank', icon: HelpCircle },
     { label: 'Batches Management', path: '/admin/batches', icon: Boxes },
     { label: 'Study Plans & Tasks', path: '/admin/tasks', icon: CheckSquare },
     { label: 'Progress Cards Hub', path: '/admin/progress-cards', icon: Award },

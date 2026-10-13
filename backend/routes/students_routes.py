@@ -166,75 +166,124 @@ def create_student(payload: StudentCreatePayload):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id FROM users WHERE LOWER(email) = ?", (payload.email.lower().strip(),))
+    email_clean = payload.email.lower().strip()
+    cursor.execute("SELECT id FROM users WHERE LOWER(email) = ?", (email_clean,))
     if cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=400, detail=f"A user with email '{payload.email}' already exists.")
 
+    cursor.execute("SELECT id FROM students WHERE LOWER(email) = ?", (email_clean,))
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail=f"A student account with email '{payload.email}' already exists.")
+
+    # Find highest sequence number safely to prevent primary key / unique constraint collisions
+    max_num = 0
+    cursor.execute("SELECT student_id FROM students")
+    for r in cursor.fetchall():
+        sid = r["student_id"] or ""
+        digits = "".join(filter(str.isdigit, sid))
+        if digits:
+            try:
+                max_num = max(max_num, int(digits))
+            except ValueError:
+                pass
+
+    cursor.execute("SELECT id FROM users WHERE id LIKE 'user-stu-%'")
+    for r in cursor.fetchall():
+        uid = r["id"] or ""
+        digits = "".join(filter(str.isdigit, uid))
+        if digits:
+            try:
+                max_num = max(max_num, int(digits))
+            except ValueError:
+                pass
+
     cursor.execute("SELECT COUNT(*) FROM students")
-    next_num = cursor.fetchone()[0] + 1
+    count_num = cursor.fetchone()[0]
+    next_num = max(max_num, count_num) + 1
+
+    stu_id = f"stu-{next_num:03d}"
     student_id = f"CF-STU-{str(next_num).zfill(4)}"
     user_id = f"user-stu-{next_num:03d}"
-    stu_id = f"stu-{next_num:03d}"
+
+    while True:
+        cursor.execute("SELECT 1 FROM students WHERE id = ? OR student_id = ?", (stu_id, student_id))
+        s_hit = cursor.fetchone()
+        cursor.execute("SELECT 1 FROM users WHERE id = ?", (user_id,))
+        u_hit = cursor.fetchone()
+        if not s_hit and not u_hit:
+            break
+        next_num += 1
+        stu_id = f"stu-{next_num:03d}"
+        student_id = f"CF-STU-{str(next_num).zfill(4)}"
+        user_id = f"user-stu-{next_num:03d}"
+
     now_str = datetime.now().isoformat()
     today_str = payload.enrollmentDate or date.today().isoformat()
 
     course_name = payload.courseName or "Banking & Financial Services"
     batch_name = payload.batchName or "Morning Achievers"
+    course_id = payload.courseId or "crs-01"
     batch_id = payload.batchId or "batch-01"
-
-    cursor.execute("""
-    INSERT INTO users (id, name, email, phone, role, password_hash, avatar_url, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        user_id,
-        payload.name.strip(),
-        payload.email.strip(),
-        payload.phone.strip(),
-        "STUDENT",
-        payload.password or "student123",
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-        now_str
-    ))
 
     sheet_url = payload.googleSheetUrl or f"https://docs.google.com/spreadsheets/d/1iqRsoh_H6_5NOW5-gjsvr0NiNV7mRDK_aVXcXtdRG3U/edit#gid={next_num}"
 
-    cursor.execute("""
-    INSERT INTO students (
-        id, user_id, student_id, name, email, phone, course_id, course_name, batch_id, batch_name,
-        enrollment_date, status, guardian_name, guardian_phone, address, blood_group, date_of_birth,
-        google_sheet_status, google_sheet_url, last_sync_time, attendance_rate, average_score,
-        total_exams_attempted, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        stu_id,
-        user_id,
-        student_id,
-        payload.name.strip(),
-        payload.email.strip(),
-        payload.phone.strip(),
-        payload.courseId,
-        course_name,
-        batch_id,
-        batch_name,
-        today_str,
-        payload.status or "ACTIVE",
-        payload.guardianName or "Self / Guardian",
-        payload.guardianPhone or payload.phone.strip(),
-        payload.address or "Kerala, India",
-        payload.bloodGroup or "B+",
-        payload.dateOfBirth or "2002-05-15",
-        payload.googleSheetStatus or "CONNECTED",
-        sheet_url,
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        100.0,
-        0.0,
-        0,
-        now_str,
-        now_str
-    ))
+    try:
+        cursor.execute("""
+        INSERT INTO users (id, name, email, phone, role, password_hash, avatar_url, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            user_id,
+            payload.name.strip(),
+            email_clean,
+            payload.phone.strip(),
+            "STUDENT",
+            payload.password or "student123",
+            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+            now_str
+        ))
 
-    conn.commit()
+        cursor.execute("""
+        INSERT INTO students (
+            id, user_id, student_id, name, email, phone, course_id, course_name, batch_id, batch_name,
+            enrollment_date, status, guardian_name, guardian_phone, address, blood_group, date_of_birth,
+            google_sheet_status, google_sheet_url, last_sync_time, attendance_rate, average_score,
+            total_exams_attempted, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            stu_id,
+            user_id,
+            student_id,
+            payload.name.strip(),
+            email_clean,
+            payload.phone.strip(),
+            course_id,
+            course_name,
+            batch_id,
+            batch_name,
+            today_str,
+            payload.status or "ACTIVE",
+            payload.guardianName or "Self / Guardian",
+            payload.guardianPhone or payload.phone.strip(),
+            payload.address or "Kerala, India",
+            payload.bloodGroup or "B+",
+            payload.dateOfBirth or "2002-05-15",
+            payload.googleSheetStatus or "CONNECTED",
+            sheet_url,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            100.0,
+            0.0,
+            0,
+            now_str,
+            now_str
+        ))
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        raise HTTPException(status_code=400, detail=f"Database record enrollment error: {str(e)}")
 
     cursor.execute("SELECT * FROM students WHERE id = ?", (stu_id,))
     row = cursor.fetchone()

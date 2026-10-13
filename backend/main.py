@@ -66,6 +66,19 @@ def health_check():
         "predefined_headers": HEADER_COLUMNS
     }
 
+# Academic Route Aliases for direct /courses and /batches queries
+@app.get("/api/v1/courses")
+def courses_alias():
+    from routes.academic_routes import list_courses
+    data = list_courses()
+    return data.get("courses", [])
+
+@app.get("/api/v1/batches")
+def batches_alias(courseId: Optional[str] = None):
+    from routes.academic_routes import list_batches
+    data = list_batches(courseId)
+    return data.get("batches", [])
+
 # Legacy Compatibility Endpoints
 class StudentEnrollmentPayload(BaseModel):
     studentId: str

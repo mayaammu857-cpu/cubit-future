@@ -58,9 +58,6 @@ export const Modal: React.FC<ModalProps> = ({
         <div
           className={`relative transform overflow-hidden rounded-2xl bg-white text-slate-900 text-left shadow-2xl transition-all sm:my-8 w-full ${maxWidthClasses[size || maxWidth || 'lg']} border border-slate-200 animate-fade-in`}
         >
-          {/* Modal Background Watermark */}
-          <AppWatermark variant="diagonal" />
-
           {/* Modal Header */}
           <div className="relative z-10 bg-brand-navy px-6 py-5 flex items-center justify-between border-b border-brand-navy-light text-white">
             <div>

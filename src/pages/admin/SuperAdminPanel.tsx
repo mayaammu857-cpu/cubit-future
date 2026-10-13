@@ -206,10 +206,15 @@ export const SuperAdminPanel: React.FC = () => {
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const selectedCourse = courses.find((c) => c.id === studentForm.courseId);
-      const selectedBatch = batches.find((b) => b.id === studentForm.batchId);
+      const selectedCourse = courses.find((c) => c.id === studentForm.courseId) || courses[0];
+      const selectedBatch = batches.find((b) => b.id === studentForm.batchId) || batches[0];
+      const courseId = studentForm.courseId || selectedCourse?.id || 'crs-01';
+      const batchId = studentForm.batchId || selectedBatch?.id || 'batch-01';
+
       await studentApi.create({
         ...studentForm,
+        courseId,
+        batchId,
         courseName: selectedCourse?.name || 'General Program',
         batchName: selectedBatch?.name || 'Regular Batch',
         googleSheetStatus: 'CONNECTED',
@@ -228,9 +233,10 @@ export const SuperAdminPanel: React.FC = () => {
         googleSheetUrl: '',
         status: 'ACTIVE',
       });
-      await fetchData();
+      fetchData().catch(() => {});
     } catch (err: any) {
-      addNotification('error', err?.message || 'Failed to enroll student.');
+      const msg = err?.response?.data?.detail || err?.message || 'Failed to enroll student.';
+      addNotification('error', typeof msg === 'string' ? msg : JSON.stringify(msg));
     }
   };
 

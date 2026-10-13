@@ -462,3 +462,44 @@ export interface Campus {
   head: string;
 }
 
+export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
+export type QuestionType = 'MCQ' | 'DESCRIPTIVE' | 'NUMERICAL';
+
+export interface QuestionBankItem {
+  id: string;
+  courseId: string;
+  courseName: string;
+  subject: string;
+  topic: string;
+  questionText: string;
+  questionType: QuestionType;
+  options: string[];
+  correctOptionIndex: number;
+  difficulty: QuestionDifficulty;
+  marks: number;
+  negativeMarks: number;
+  explanation: string;
+  addedBy: string;
+  creatorRole: Role;
+  createdAt: string;
+  updatedAt?: string;
+  status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
+  usageCount: number;
+  accuracyRate: number;
+}
+
+export interface CourseQuestionStats {
+  courseId: string;
+  courseName: string;
+  totalQuestions: number;
+  easyCount: number;
+  mediumCount: number;
+  hardCount: number;
+  subjectsCount: number;
+  uniqueTopicsCount: number;
+  totalAttempts: number;
+  avgAccuracy: number;
+  coverageStatus: 'OPTIMAL' | 'MODERATE' | 'NEEDS_QUESTIONS';
+  lastUpdated: string;
+}
+

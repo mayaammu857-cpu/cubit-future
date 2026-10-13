@@ -154,12 +154,16 @@ export const AdminStudents: React.FC = () => {
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const selectedCourse = courses.find((c) => c.id === formData.courseId);
-      const selectedBatch = batches.find((b) => b.id === formData.batchId);
+      const selectedCourse = courses.find((c) => c.id === formData.courseId) || courses[0];
+      const selectedBatch = batches.find((b) => b.id === formData.batchId) || batches[0];
+      const courseId = formData.courseId || selectedCourse?.id || 'crs-01';
+      const batchId = formData.batchId || selectedBatch?.id || 'batch-01';
 
       if (editingStudentId) {
         await studentApi.update(editingStudentId, {
           ...formData,
+          courseId,
+          batchId,
           courseName: selectedCourse?.name || 'General Program',
           batchName: selectedBatch?.name || 'Regular Batch',
           googleSheetStatus: formData.googleSheetUrl ? 'CONNECTED' : 'DISCONNECTED',
@@ -168,6 +172,8 @@ export const AdminStudents: React.FC = () => {
       } else {
         await studentApi.create({
           ...formData,
+          courseId,
+          batchId,
           courseName: selectedCourse?.name || 'General Program',
           batchName: selectedBatch?.name || 'Regular Batch',
           googleSheetStatus: 'CONNECTED',
@@ -188,9 +194,11 @@ export const AdminStudents: React.FC = () => {
         googleSheetUrl: '',
         status: 'ACTIVE',
       });
-      await fetchAll();
-    } catch {
-      addNotification('error', 'Error saving student record.');
+      // Refresh list without crashing if network has delay
+      fetchAll().catch(() => {});
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Error saving student record.';
+      addNotification('error', typeof msg === 'string' ? msg : JSON.stringify(msg));
     }
   };
 
@@ -540,11 +548,15 @@ export const AdminStudents: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                 className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
               >
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {courses.length === 0 ? (
+                  <option value="crs-01">Banking & Financial Services</option>
+                ) : (
+                  courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
@@ -557,11 +569,15 @@ export const AdminStudents: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
                 className="w-full px-3.5 py-2.5 text-sm font-medium text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-orange/40 focus:border-brand-orange focus:outline-none transition"
               >
-                {batches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
+                {batches.length === 0 ? (
+                  <option value="batch-01">Morning Achievers</option>
+                ) : (
+                  batches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             <div>

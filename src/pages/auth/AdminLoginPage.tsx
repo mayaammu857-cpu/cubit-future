@@ -16,7 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 
 export const AdminLoginPage: React.FC = () => {
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
 
@@ -28,14 +28,56 @@ export const AdminLoginPage: React.FC = () => {
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
+    const cleanEmail = email.trim();
+    const rawPass = password.trim();
+
+    if (!cleanEmail) {
       addNotification('warning', 'Please enter your authorized administrative email address.');
+      return;
+    }
+    if (!rawPass) {
+      addNotification('warning', 'Please enter your administrator password.');
+      return;
+    }
+
+    // 1. Explicit Security Filter: Block student & teacher passwords on admin portal
+    const blockedPasswords = ['student123', 'student', 'teacher@2026'];
+    if (blockedPasswords.includes(rawPass.toLowerCase())) {
+      addNotification(
+        'error',
+        'Security Alert: Student or faculty passwords cannot be used to sign into the Administrative Portal. Please enter your authorized administrative credentials.'
+      );
+      return;
+    }
+
+    // 2. Explicit Role Boundary: Block student identifiers on admin portal
+    const lowId = cleanEmail.toLowerCase();
+    if (
+      lowId === 'student' ||
+      lowId.startsWith('cf-stu-') ||
+      lowId.startsWith('student.') ||
+      lowId.includes('@student.') ||
+      lowId.endsWith('@student.cubitfuture.com')
+    ) {
+      addNotification(
+        'error',
+        'Access Denied: This portal is strictly for Academy Administrators. Students must sign in via the Student Portal.'
+      );
+      return;
+    }
+
+    // 3. Explicit Role Boundary: Block teachers from logging into admin portal
+    if (lowId === 'teacher' || lowId.startsWith('teacher@') || lowId.startsWith('teacher.')) {
+      addNotification(
+        'error',
+        'Access Denied: Faculty members must sign in via the Faculty / Teacher Portal.'
+      );
       return;
     }
 
     setLoading(true);
     try {
-      const loggedUser = await login(email.trim(), password);
+      const loggedUser = await login(cleanEmail, rawPass, 'ADMIN');
       if (loggedUser.role === 'SUPER_ADMIN') {
         addNotification('success', 'Super Administrator authentication verified. Welcome to Root Console.');
         navigate('/admin/superadmin');
@@ -45,12 +87,11 @@ export const AdminLoginPage: React.FC = () => {
       } else if (loggedUser.role === 'COUNSELLOR') {
         addNotification('success', `Welcome, Counsellor ${loggedUser.name}!`);
         navigate('/admin/counsellors');
-      } else if (loggedUser.role === 'TEACHER') {
-        addNotification('success', `Faculty session initiated for Professor ${loggedUser.name}.`);
-        navigate('/teacher/dashboard');
       } else {
-        addNotification('info', 'Student account detected. Redirecting to Student Academic Portal.');
-        navigate('/student/dashboard');
+        logout();
+        throw new Error(
+          'Access Denied: This portal is strictly for Academy Administrators. Students and faculty must sign in via their dedicated portals.'
+        );
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Administrative access denied. Invalid credentials.';
@@ -118,7 +159,7 @@ export const AdminLoginPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@cubitfuture.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-black/40 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange transition"
+                  className="w-full pl-10 pr-4 py-3 bg-[#081232] border border-brand-orange/40 rounded-xl text-base sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange transition font-medium"
                   required
                 />
               </div>
@@ -137,7 +178,7 @@ export const AdminLoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 bg-black/40 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange transition"
+                  className="w-full pl-10 pr-10 py-3 bg-[#081232] border border-brand-orange/40 rounded-xl text-base sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange transition font-medium"
                   required
                 />
                 <button
@@ -164,7 +205,7 @@ export const AdminLoginPage: React.FC = () => {
                   onChange={(e) => setSecurityPin(e.target.value)}
                   placeholder="6-digit authorization token"
                   maxLength={6}
-                  className="w-full pl-10 pr-4 py-2.5 bg-black/40 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange transition font-mono tracking-widest"
+                  className="w-full pl-10 pr-4 py-3 bg-[#081232] border border-brand-orange/40 rounded-xl text-base sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange transition font-mono tracking-widest font-medium"
                 />
               </div>
             </div>

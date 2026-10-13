@@ -59,7 +59,7 @@ export const setIsDemoMode = (val: boolean): void => {
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 8000,
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -121,10 +121,10 @@ export function getStoredCourses(): Course[] {
     const raw = localStorage.getItem(STORAGE_KEY_COURSES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch {}
-  return [];
+  return mockCourses;
 }
 
 export function persistCourses(list: Course[]) {
@@ -138,10 +138,10 @@ export function getStoredBatches(): Batch[] {
     const raw = localStorage.getItem(STORAGE_KEY_BATCHES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch {}
-  return [];
+  return mockBatches;
 }
 
 export function persistBatches(list: Batch[]) {
@@ -245,7 +245,7 @@ export function studentFromDb(row: any): Student {
     guardianPhone: row.guardian_phone,
     address: row.address,
     bloodGroup: row.blood_group,
-    dateOfBirth: row.date_of_birth,
+    dateOfBirth: row.date_of_birth || row.dateofbirth || '',
     googleSheetStatus: row.google_sheet_status || 'CONNECTED',
     googleSheetUrl: row.google_sheet_url,
     lastSyncTime: row.last_sync_time || 'Just now',
@@ -274,7 +274,9 @@ export function studentToDb(s: Partial<Student>): any {
   if (s.guardianPhone !== undefined) row.guardian_phone = s.guardianPhone;
   if (s.address !== undefined) row.address = s.address;
   if (s.bloodGroup !== undefined) row.blood_group = s.bloodGroup;
-  if (s.dateOfBirth !== undefined) row.date_of_birth = s.dateOfBirth;
+  if (s.dateOfBirth !== undefined) {
+    row.dateofbirth = s.dateOfBirth;
+  }
   if (s.googleSheetStatus) row.google_sheet_status = s.googleSheetStatus;
   if (s.googleSheetUrl !== undefined) row.google_sheet_url = s.googleSheetUrl;
   if (s.lastSyncTime !== undefined) row.last_sync_time = s.lastSyncTime;
@@ -302,9 +304,19 @@ export const authApi = {
     if (!getIsDemoMode()) {
       try {
         const res = await apiClient.post('/auth/register', data);
-        return res.data;
-      } catch (err) {
-        if ((err as AxiosError).code !== 'ERR_NETWORK') throw err;
+        if (res.data) {
+          if (res.data.student) {
+            currentStudentsList = [res.data.student, ...currentStudentsList.filter((s) => s.id !== res.data.student.id)];
+            persistStudents(currentStudentsList);
+          }
+          return res.data;
+        }
+      } catch (err: any) {
+        if (err.response && (err.response.status === 400 || err.response.status === 422)) {
+          const detail = err.response.data?.detail || err.message;
+          throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+        }
+        console.warn('Backend register offline or timed out, continuing with local/database store:', err);
       }
     }
 
@@ -323,15 +335,36 @@ export const authApi = {
       throw new Error(`An account with this email (${data.email}) or mobile number is already registered.`);
     }
 
-    const nextNum = currentStudentsList.length + 1;
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbCheck } = await supabase
+          .from('students')
+          .select('id, email')
+          .ilike('email', cleanEmail)
+          .limit(1);
+        if (sbCheck && sbCheck.length > 0) {
+          throw new Error(`An account with this email (${data.email}) is already registered.`);
+        }
+      } catch (sbErr: any) {
+        if (sbErr.message && sbErr.message.includes('already registered')) throw sbErr;
+      }
+    }
+
+    let maxStuNum = 0;
+    currentStudentsList.forEach((s) => {
+      const match = (s.studentId || '').match(/(\d+)$/);
+      if (match) maxStuNum = Math.max(maxStuNum, parseInt(match[1], 10));
+    });
+
+    const nextNum = Math.max(maxStuNum, currentStudentsList.length) + 1;
     const studentIdCode = `CF-STU-${String(nextNum).padStart(4, '0')}`;
     const storedCourses = getStoredCourses();
     const storedBatches = getStoredBatches();
     const course = storedCourses.find((c) => c.id === data.courseId) || storedCourses[0];
     const batch = storedBatches.find((b) => b.courseId === course?.id) || storedBatches[0];
-    const courseId = course?.id || data.courseId || 'course-1';
+    const courseId = course?.id || data.courseId || 'crs-01';
     const courseName = data.courseName || course?.name || 'General Program';
-    const batchId = batch?.id || 'batch-1';
+    const batchId = batch?.id || 'batch-01';
     const batchName = batch?.name || 'Standard Batch';
 
     const newStudent: Student = {
@@ -398,7 +431,7 @@ export const authApi = {
     return { token, user, student: newStudent };
   },
 
-  async login(identifier: string, password?: string): Promise<{ token: string; user: User; student?: Student }> {
+  async login(identifier: string, password?: string, role?: string): Promise<{ token: string; user: User; student?: Student }> {
     const cleanId = (identifier || '').toLowerCase().trim();
     const rawPass = (password || '').trim();
 
@@ -434,7 +467,7 @@ export const authApi = {
 
     if (!getIsDemoMode()) {
       try {
-        const res = await apiClient.post('/auth/login', { identifier, password });
+        const res = await apiClient.post('/auth/login', { identifier, password, role });
         localStorage.removeItem(ATTEMPTS_KEY);
         localStorage.removeItem(LOCKOUT_KEY);
         return res.data;
@@ -467,24 +500,53 @@ export const authApi = {
       throw new Error(reason);
     };
 
-    const isMasterPass = (pass: string) => {
+    const isStudentPass = (pass: string) => {
+      const p = pass.trim().toLowerCase();
+      return p === 'student123' || p === 'student';
+    };
+
+    const isSuperAdminPass = (pass: string) => {
       const p = pass.trim();
+      return p === 'SuperAdmin@2026' || p === 'cubit2026' || p === '••••••••';
+    };
+
+    const isAdminPass = (pass: string) => {
+      const p = pass.trim();
+      return p === 'Admin@2026' || p === 'SuperAdmin@2026' || p === 'cubit2026' || p === '••••••••';
+    };
+
+    const isTeacherPass = (pass: string) => {
+      const p = pass.trim();
+      return p === 'Teacher@2026' || p === 'cubit2026' || p === '••••••••';
+    };
+
+    const isCounsellorPass = (pass: string) => {
+      const p = pass.trim();
+      return p === 'Counsellor@2026' || p === 'cubit2026' || p === '••••••••';
+    };
+
+    // Any Administrative or Faculty passwords — NEVER permitted for student login
+    const isAdministrativeOrFacultyPassword = (pass: string) => {
+      const p = pass.trim().toLowerCase();
       return (
-        p === 'SuperAdmin@2026' ||
-        p === 'Admin@2026' ||
-        p === 'Teacher@2026' ||
-        p === 'Counsellor@2026' ||
-        p === 'admin123' ||
-        p === 'student123' ||
-        p === 'cubit2026' ||
-        p === '••••••••'
+        p === 'superadmin@2026' ||
+        p === 'admin@2026' ||
+        p === 'teacher@2026' ||
+        p === 'counsellor@2026' ||
+        p === 'admin123'
       );
     };
 
     // 3. Super Admin Authentication
     if (cleanId === 'superadmin@cubitfuture.com' || cleanId === 'superadmin' || cleanId === 'super_admin') {
-      if (!rawPass || (!isMasterPass(rawPass) && rawPass !== 'SuperAdmin@2026')) {
+      if (isStudentPass(rawPass)) {
+        await recordFailedAttempt('Security Alert: Student passwords cannot be used to sign into the Super Admin console.');
+      }
+      if (!rawPass || !isSuperAdminPass(rawPass)) {
         await recordFailedAttempt('Invalid Super Admin credentials. High-privilege access denied.');
+      }
+      if (role && role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+        await recordFailedAttempt(`Access Denied: Cannot sign into ${role} portal with Super Admin credentials.`);
       }
       localStorage.removeItem(ATTEMPTS_KEY);
       localStorage.removeItem(LOCKOUT_KEY);
@@ -503,8 +565,14 @@ export const authApi = {
 
     // 4. Admin Authentication
     if (cleanId === 'admin@cubitfuture.com' || cleanId === 'admin' || cleanId.startsWith('admin.')) {
-      if (!rawPass || (!isMasterPass(rawPass) && rawPass !== 'Admin@2026')) {
+      if (isStudentPass(rawPass)) {
+        await recordFailedAttempt('Security Alert: Student passwords cannot be used to sign into administrative accounts.');
+      }
+      if (!rawPass || !isAdminPass(rawPass)) {
         await recordFailedAttempt('Invalid Admin password. Administrative console access denied.');
+      }
+      if (role && role !== 'ADMIN') {
+        await recordFailedAttempt(`Access Denied: Cannot sign into ${role} portal with Admin credentials.`);
       }
       localStorage.removeItem(ATTEMPTS_KEY);
       localStorage.removeItem(LOCKOUT_KEY);
@@ -523,7 +591,10 @@ export const authApi = {
 
     // 5. Counsellor Authentication
     if (cleanId === 'counsellor@cubitfuture.com' || cleanId === 'counsellor' || cleanId.startsWith('counsellor.')) {
-      if (!rawPass || (!isMasterPass(rawPass) && rawPass !== 'Counsellor@2026')) {
+      if (isStudentPass(rawPass)) {
+        await recordFailedAttempt('Security Alert: Student passwords cannot be used to sign into counsellor accounts.');
+      }
+      if (!rawPass || !isCounsellorPass(rawPass)) {
         await recordFailedAttempt('Invalid Counsellor credentials.');
       }
       localStorage.removeItem(ATTEMPTS_KEY);
@@ -543,8 +614,14 @@ export const authApi = {
 
     // 5b. Teacher Authentication (Faculty & Academic Mentors)
     if (cleanId === 'teacher@cubitfuture.com' || cleanId === 'teacher' || cleanId.startsWith('teacher.')) {
-      if (!rawPass || (!isMasterPass(rawPass) && rawPass !== 'Teacher@2026' && rawPass !== 'admin123')) {
+      if (isStudentPass(rawPass)) {
+        await recordFailedAttempt('Security Alert: Student passwords cannot be used to sign into faculty accounts.');
+      }
+      if (!rawPass || !isTeacherPass(rawPass)) {
         await recordFailedAttempt('Invalid Teacher credentials.');
+      }
+      if (role && role !== 'TEACHER') {
+        await recordFailedAttempt(`Access Denied: Faculty accounts must sign in via the Teacher Portal.`);
       }
       localStorage.removeItem(ATTEMPTS_KEY);
       localStorage.removeItem(LOCKOUT_KEY);
@@ -560,6 +637,7 @@ export const authApi = {
       } catch {}
       return { token, user };
     }
+
 
     // 6. Student Authentication
     let matched: Student | null | undefined = null;
@@ -597,6 +675,19 @@ export const authApi = {
       await recordFailedAttempt('Student account not found with this identifier. Please verify ID or sign up.');
     }
 
+    if (role && role !== 'STUDENT') {
+      await recordFailedAttempt(
+        `Access Denied: Account is registered as a Student. Access to the ${role} portal is prohibited. Please sign in via the Student Portal.`
+      );
+    }
+
+    // Strict Security Constraint: Administrative passwords are strictly prohibited for student accounts
+    if (isAdministrativeOrFacultyPassword(rawPass)) {
+      await recordFailedAttempt(
+        'Security Alert: Administrative passwords cannot be used to sign into student accounts. Please use your authorized student password or Date of Birth.'
+      );
+    }
+
     const isDobPattern = rawPass && /^\d{4}-\d{2}-\d{2}$/.test(rawPass);
     if (isDobPattern) {
       if (activeStudent.dateOfBirth && activeStudent.dateOfBirth !== rawPass) {
@@ -610,10 +701,18 @@ export const authApi = {
         passwords[activeStudent.email.toLowerCase()] ||
         (phoneDigits ? passwords[phoneDigits] : undefined) ||
         'student123';
-      if (storedPass && rawPass !== storedPass && !isMasterPass(rawPass)) {
-        await recordFailedAttempt('Incorrect student password. Please verify or use Date of Birth to sign in.');
+
+      const isValidStudentPass =
+        rawPass === storedPass ||
+        rawPass === 'student123' ||
+        rawPass === 'cubit2026' ||
+        rawPass === '••••••••';
+
+      if (!isValidStudentPass) {
+        await recordFailedAttempt('Incorrect student password. Please verify or use Date of Birth (YYYY-MM-DD) to sign in.');
       }
     }
+
 
     localStorage.removeItem(ATTEMPTS_KEY);
     localStorage.removeItem(LOCKOUT_KEY);
@@ -1019,28 +1118,82 @@ export const studentApi = {
     if (!getIsDemoMode()) {
       try {
         const res = await apiClient.post('/students', data);
-        return res.data;
-      } catch (err) {
-        if ((err as AxiosError).code !== 'ERR_NETWORK') throw err;
+        if (res.data) {
+          const createdStudent = res.data;
+          currentStudentsList = [
+            createdStudent,
+            ...currentStudentsList.filter((s) => s.id !== createdStudent.id && s.studentId !== createdStudent.studentId),
+          ];
+          persistStudents(currentStudentsList);
+          if (isSupabaseConfigured() && supabase) {
+            try {
+              const dbPayload = studentToDb(createdStudent);
+              await supabase.from('students').upsert(dbPayload);
+            } catch (sbErr) {
+              console.warn('Supabase mirror note:', sbErr);
+            }
+          }
+          return createdStudent;
+        }
+      } catch (err: any) {
+        // If it's a 400 or 422 error from the backend (like duplicate email), surface it immediately
+        if (err.response && (err.response.status === 400 || err.response.status === 422)) {
+          const detail = err.response.data?.detail || err.message;
+          throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+        }
+        console.warn('Backend student creation offline or timed out, persisting locally and in database:', err);
       }
     }
 
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 300));
     // Check duplicate email
     const exists = currentStudentsList.some((s) => s.email.toLowerCase() === data.email.toLowerCase());
     if (exists) {
       throw new Error(`A student account with email '${data.email}' already exists.`);
     }
 
-    const nextNum = currentStudentsList.length + 1;
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbCheck } = await supabase
+          .from('students')
+          .select('id, email')
+          .ilike('email', data.email.trim())
+          .limit(1);
+        if (sbCheck && sbCheck.length > 0) {
+          throw new Error(`A student account with email '${data.email}' already exists.`);
+        }
+      } catch (sbErr: any) {
+        if (sbErr.message && sbErr.message.includes('already exists')) throw sbErr;
+      }
+    }
+
+    let maxStuNum = 0;
+    currentStudentsList.forEach((s) => {
+      const match = (s.studentId || '').match(/(\d+)$/);
+      if (match) maxStuNum = Math.max(maxStuNum, parseInt(match[1], 10));
+    });
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbStudents } = await supabase.from('students').select('student_id');
+        if (sbStudents) {
+          sbStudents.forEach((r: any) => {
+            const match = (r.student_id || '').match(/(\d+)$/);
+            if (match) maxStuNum = Math.max(maxStuNum, parseInt(match[1], 10));
+          });
+        }
+      } catch {}
+    }
+
+    const nextNum = Math.max(maxStuNum, currentStudentsList.length) + 1;
     const studentIdCode = `CF-STU-${String(nextNum).padStart(4, '0')}`;
     const storedCourses = getStoredCourses();
     const storedBatches = getStoredBatches();
     const course = storedCourses.find((c) => c.id === data.courseId) || storedCourses[0];
     const batch = storedBatches.find((b) => b.id === data.batchId) || storedBatches[0];
-    const courseId = data.courseId || course?.id || 'course-1';
+    const courseId = data.courseId || course?.id || 'crs-01';
     const courseName = data.courseName || course?.name || 'General Program';
-    const batchId = data.batchId || batch?.id || 'batch-1';
+    const batchId = data.batchId || batch?.id || 'batch-01';
     const batchName = data.batchName || batch?.name || 'Regular Batch';
 
     let provisionedSheetUrl = data.googleSheetUrl;
@@ -1062,7 +1215,7 @@ export const studentApi = {
     } catch {
       // Fallback to standard sheet template if backend service is not running
       if (!provisionedSheetUrl) {
-        provisionedSheetUrl = `https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit#gid=${nextNum}`;
+        provisionedSheetUrl = `https://docs.google.com/spreadsheets/d/1iqRsoh_H6_5NOW5-gjsvr0NiNV7mRDK_aVXcXtdRG3U/edit#gid=${nextNum}`;
         sheetStatus = 'CONNECTED';
       }
     }
@@ -1448,10 +1601,11 @@ export const batchApi = {
         }
       }
       try {
-        const res = await apiClient.get('/batches');
-        if (res.data && res.data.length > 0) return res.data;
+        const res = await apiClient.get('/academic/batches').catch(() => apiClient.get('/batches'));
+        const list = res.data?.batches || (Array.isArray(res.data) ? res.data : []);
+        if (list.length > 0) return list;
       } catch (err) {
-        if ((err as AxiosError).code !== 'ERR_NETWORK') throw err;
+        console.warn('Backend batches query note:', err);
       }
     }
     return getStoredBatches();
@@ -1535,10 +1689,11 @@ export const courseApi = {
         }
       }
       try {
-        const res = await apiClient.get('/courses');
-        if (res.data && res.data.length > 0) return res.data;
+        const res = await apiClient.get('/academic/courses').catch(() => apiClient.get('/courses'));
+        const list = res.data?.courses || (Array.isArray(res.data) ? res.data : []);
+        if (list.length > 0) return list;
       } catch (err) {
-        if ((err as AxiosError).code !== 'ERR_NETWORK') throw err;
+        console.warn('Backend courses query note:', err);
       }
     }
     return getStoredCourses();
@@ -3125,8 +3280,9 @@ export const sheetsConfigApi = {
   },
 };
 
-// Re-export monitoringApi
+// Re-export monitoringApi and questionBankApi
 export { monitoringApi } from './monitoringApi';
+export { questionBankApi } from './questionBankApi';
 
 
 

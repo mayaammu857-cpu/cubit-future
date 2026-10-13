@@ -11,7 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   isDemoMode: boolean;
   setDemoMode: (val: boolean) => void;
-  login: (identifier: string, password?: string) => Promise<User>;
+  login: (identifier: string, password?: string, role?: string) => Promise<User>;
   registerStudent: (data: {
     name: string;
     email: string;
@@ -111,10 +111,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (identifier: string, password?: string): Promise<User> => {
+  const login = async (identifier: string, password?: string, role?: string): Promise<User> => {
     setIsLoading(true);
     try {
-      const res = await authApi.login(identifier, password);
+      const res = await authApi.login(identifier, password, role);
       setUser(res.user);
       localStorage.setItem('cf_auth_token', res.token);
       localStorage.setItem('cf_user_role', res.user.role);

@@ -11,6 +11,7 @@ import {
   X,
   GraduationCap,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -32,6 +33,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ isOpen, onClose 
   const navItems = [
     { label: 'Faculty Dashboard', path: '/teacher/dashboard', icon: LayoutDashboard },
     { label: 'Student Monitoring Hub', path: '/teacher/monitoring', icon: Activity },
+    { label: 'Course Question Bank', path: '/teacher/question-bank', icon: HelpCircle },
     { label: 'Task Management & Review', path: '/teacher/tasks', icon: CheckSquare },
     { label: 'Digital Study Plans', path: '/teacher/study-plans', icon: BookOpen },
     { label: 'My Students & Batches', path: '/teacher/students', icon: Users },

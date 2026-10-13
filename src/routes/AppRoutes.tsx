@@ -36,6 +36,7 @@ import { DataExport } from '../pages/admin/DataExport';
 import { RolesPermissions } from '../pages/admin/RolesPermissions';
 import { NotificationsPage } from '../pages/admin/NotificationsPage';
 import { AuditLogsPage } from '../pages/admin/AuditLogsPage';
+import { AdminQuestionBankPage } from '../pages/admin/AdminQuestionBankPage';
 
 // Teacher & Faculty Pages
 import { TeacherDashboard } from '../pages/teacher/TeacherDashboard';
@@ -44,6 +45,7 @@ import { TeacherStudyPlansPage } from '../pages/teacher/TeacherStudyPlansPage';
 import { TeacherStudentsPage } from '../pages/teacher/TeacherStudentsPage';
 import { TeacherProgressCardsPage } from '../pages/teacher/TeacherProgressCardsPage';
 import { TeacherStudentMonitoringPage } from '../pages/teacher/TeacherStudentMonitoringPage';
+import { TeacherQuestionBankPage } from '../pages/teacher/TeacherQuestionBankPage';
 import { AdminStudentMonitoringPage } from '../pages/admin/AdminStudentMonitoringPage';
 
 // Student Pages
@@ -57,6 +59,7 @@ import { StudentPerformance } from '../pages/student/StudentPerformance';
 import { StudentDoubtSolverPage } from '../pages/student/StudentDoubtSolverPage';
 import { StudentKnowledgeRadarPage } from '../pages/student/StudentKnowledgeRadarPage';
 import { StudentMediaSummarizerPage } from '../pages/student/StudentMediaSummarizerPage';
+import { StudentQuestionBankPage } from '../pages/student/StudentQuestionBankPage';
 
 // Shared System Pages
 import { GoogleSheetsSync } from '../pages/common/GoogleSheetsSync';
@@ -203,6 +206,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/student/ai-tutor" element={<StudentDoubtSolverPage />} />
         <Route path="/student/knowledge-radar" element={<StudentKnowledgeRadarPage />} />
         <Route path="/student/summarizer" element={<StudentMediaSummarizerPage />} />
+        <Route path="/student/question-bank" element={<StudentQuestionBankPage />} />
 
         <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="/student/settings" element={<SettingsPage />} />
@@ -216,6 +220,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/teacher/study-plans" element={<TeacherStudyPlansPage />} />
         <Route path="/teacher/students" element={<TeacherStudentsPage />} />
         <Route path="/teacher/progress-cards" element={<TeacherProgressCardsPage />} />
+        <Route path="/teacher/question-bank" element={<TeacherQuestionBankPage />} />
         <Route path="/teacher/settings" element={<SettingsPage />} />
       </Route>
 
@@ -236,6 +241,9 @@ export const AppRoutes: React.FC = () => {
         {/* Tasks & Progress Cards Supervision */}
         <Route path="/admin/tasks" element={<AdminTasksPage />} />
         <Route path="/admin/progress-cards" element={<AdminProgressCardsHub />} />
+
+        {/* Exam Question Bank & Course Monitoring Hub */}
+        <Route path="/admin/question-bank" element={<AdminQuestionBankPage />} />
 
         {/* Management Module */}
         <Route path="/admin/students" element={<AdminStudents />} />

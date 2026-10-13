@@ -16,7 +16,7 @@ import { Modal } from '../../components/common/Modal';
 import { Course } from '../../types';
 
 export const LoginPage: React.FC = () => {
-  const { login, registerStudent } = useAuth();
+  const { login, logout, registerStudent } = useAuth();
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
 
@@ -31,35 +31,67 @@ export const LoginPage: React.FC = () => {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!identifier.trim()) {
+    const cleanInput = identifier.trim();
+    const rawPass = password.trim();
+
+    if (!cleanInput) {
       addNotification('warning', 'Please enter your user ID.');
       return;
     }
-    if (!password.trim()) {
+    if (!rawPass) {
       addNotification('warning', 'Please enter your password.');
+      return;
+    }
+
+    // 1. Explicit Security Filter: Block administrative passwords on student portal
+    const blockedAdminPasswords = [
+      'admin@2026',
+      'superadmin@2026',
+      'teacher@2026',
+      'counsellor@2026',
+      'admin123',
+    ];
+    if (blockedAdminPasswords.includes(rawPass.toLowerCase())) {
+      addNotification(
+        'error',
+        'Security Alert: Administrative passwords cannot be used to sign into the Student Portal. Please enter your authorized student password.'
+      );
+      return;
+    }
+
+    // 2. Explicit Role Boundary: Block administrative usernames on student portal
+    const lowId = cleanInput.toLowerCase();
+    if (
+      lowId === 'admin' ||
+      lowId === 'superadmin' ||
+      lowId === 'teacher' ||
+      lowId === 'counsellor' ||
+      lowId.startsWith('admin@') ||
+      lowId.startsWith('teacher@') ||
+      lowId.startsWith('counsellor@') ||
+      lowId.startsWith('superadmin@')
+    ) {
+      addNotification(
+        'error',
+        'Access Denied: This portal is strictly for Students. Administrators and Teachers must sign in via their dedicated portals.'
+      );
       return;
     }
 
     setLoading(true);
     try {
-      const loggedUser = await login(identifier.trim(), password.trim());
+      const loggedUser = await login(cleanInput, rawPass, 'STUDENT');
 
-      if (loggedUser.role === 'SUPER_ADMIN') {
-        addNotification('success', 'Super Administrator authentication verified.');
-        navigate('/admin/superadmin');
-      } else if (loggedUser.role === 'ADMIN') {
-        addNotification('success', `Welcome back, ${loggedUser.name}!`);
-        navigate('/admin/dashboard');
-      } else if (loggedUser.role === 'TEACHER') {
-        addNotification('success', `Welcome back, Professor ${loggedUser.name}!`);
-        navigate('/teacher/dashboard');
-      } else if (loggedUser.role === 'COUNSELLOR') {
-        addNotification('success', `Welcome, Counsellor ${loggedUser.name}!`);
-        navigate('/admin/counsellors');
-      } else {
-        addNotification('success', `Welcome back, ${loggedUser.name}!`);
-        navigate('/student/dashboard');
+      // 3. Strict Student Only Role Check
+      if (loggedUser.role !== 'STUDENT') {
+        logout();
+        throw new Error(
+          'Access Denied: Administrative and faculty access is strictly prohibited on the Student Portal. Please use your designated login portal.'
+        );
       }
+
+      addNotification('success', `Welcome back, ${loggedUser.name}!`);
+      navigate('/student/dashboard');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Authentication failed. Please verify credentials.';
       addNotification('error', msg);
@@ -67,6 +99,7 @@ export const LoginPage: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   // Modals for Real Registration and Account Recovery
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -185,7 +218,7 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="Enter your user ID"
                   required
-                  className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC]/50 hover:bg-white focus:bg-white border border-slate-200 focus:border-[#0052CC] rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0052CC]/10 transition font-normal"
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-slate-300 focus:border-[#0052CC] rounded-xl text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0052CC]/10 transition font-medium shadow-sm"
                 />
               </div>
             </div>
@@ -205,7 +238,7 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="w-full pl-11 pr-11 py-3 bg-[#F8FAFC]/50 hover:bg-white focus:bg-white border border-slate-200 focus:border-[#0052CC] rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0052CC]/10 transition font-normal"
+                  className="w-full pl-11 pr-11 py-3 bg-white border border-slate-300 focus:border-[#0052CC] rounded-xl text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0052CC]/10 transition font-medium shadow-sm"
                 />
                 <button
                   type="button"
