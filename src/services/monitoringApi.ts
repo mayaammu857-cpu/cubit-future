@@ -1,4 +1,4 @@
-import { getStoredStudents } from './api';
+import { getStoredStudents, getStoredExams, getStoredAssignments } from './api';
 import { mockStudents } from '../data/mockData';
 import {
   StudentMonitoringMetric,
@@ -106,11 +106,24 @@ export const monitoringApi = {
 
     const interventionsMap = getStoredInterventionsMap();
     const notesMap = getStoredNotesMap();
+    const allExams = getStoredExams();
+    const allAssignments = getStoredAssignments();
+
+    let currentLoggedUser: any = null;
+    try {
+      const rawUser = localStorage.getItem('cf_auth_user');
+      if (rawUser) currentLoggedUser = JSON.parse(rawUser);
+    } catch {}
 
     // Map each student to a rich monitoring metric
     const allMetrics: StudentMonitoringMetric[] = students.map((s, idx) => {
       const att = s.attendanceRate || 80;
-      const avg = s.averageScore || 70;
+      const studentExams = allExams.filter((e) => e.studentId === s.studentId || e.studentId === s.id);
+      const studentTasks = allAssignments.filter((t) => t.studentId === s.studentId || t.studentId === s.id);
+
+      const avg = studentExams.length > 0
+        ? Math.round((studentExams.reduce((sum, e) => sum + (e.percentage || 0), 0) / studentExams.length) * 10) / 10
+        : s.averageScore || 70;
 
       // Risk score calculation
       let riskScore = 0;
@@ -145,12 +158,37 @@ export const monitoringApi = {
       let weakestSubject = 'Logical Reasoning';
       let weakestTopic = 'Syllogisms & Analytical Puzzles';
       let strongestSubject = 'Quantitative Aptitude';
+      let latestExamName = 'Comprehensive Mock Assessment';
 
-      if (s.studentId === 'CF-STU-0005') {
+      // Pull real student exams if present
+      if (studentExams.length > 0) {
+        scoreTrend = studentExams.slice(0, 5).reverse().map((e) => e.percentage);
+        latestExamName = studentExams[0]?.examName || latestExamName;
+        const sorted = [...studentExams].sort((a, b) => (a.percentage || 0) - (b.percentage || 0));
+        weakestSubject = sorted[0]?.subject || weakestSubject;
+        strongestSubject = sorted[sorted.length - 1]?.subject || strongestSubject;
+      }
+
+      // Pull real student task assignments if present
+      if (studentTasks.length > 0) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        completedTasks = studentTasks.filter((t) => t.status === 'APPROVED').length;
+        pendingTasks = studentTasks.filter((t) => t.status === 'ASSIGNED' || t.status === 'IN_PROGRESS' || t.status === 'SUBMITTED' || t.status === 'REVISION_REQUIRED').length;
+        overdueTasks = studentTasks.filter((t) => t.status !== 'APPROVED' && t.dueDate && t.dueDate < todayStr).length;
+
+        if (overdueTasks > 0) {
+          riskScore += overdueTasks * 12;
+          riskFactors.push(`${overdueTasks} assigned tasks overdue in Student Portal`);
+        }
+      }
+
+      if (currentLoggedUser && (currentLoggedUser.id === s.id || currentLoggedUser.studentId === s.studentId || currentLoggedUser.email === s.email)) {
+        onlineStatus = 'STUDYING';
+        lastActive = 'Active now in Student Portal';
+      } else if (s.studentId === 'CF-STU-0005') {
         // High Risk Student
-        overdueTasks = 3;
-        pendingTasks = 2;
-        completedTasks = 1;
+        overdueTasks = Math.max(overdueTasks, 3);
+        pendingTasks = Math.max(pendingTasks, 2);
         riskScore += 30;
         riskFactors.push('3 assignments currently overdue past deadline');
         riskFactors.push('Unresponsive in portal for > 72 hours');
@@ -159,15 +197,13 @@ export const monitoringApi = {
         weeklyStudyHours = 3.2;
         doubtsThisWeek = 0;
         gapSeverity = 'HIGH';
-        scoreTrend = [58, 52, 49, 44, 48];
+        if (studentExams.length === 0) scoreTrend = [58, 52, 49, 44, 48];
         weakestSubject = 'Quantitative Aptitude';
         weakestTopic = 'Compound Interest & Data Interpretation';
         strongestSubject = 'General Awareness';
       } else if (s.studentId === 'CF-STU-0006') {
         // Moderate Risk Student
-        overdueTasks = 1;
-        pendingTasks = 2;
-        completedTasks = 3;
+        overdueTasks = Math.max(overdueTasks, 1);
         riskScore += 15;
         riskFactors.push('Declining score trajectory in latest mock exam');
         onlineStatus = 'AWAY';
@@ -175,10 +211,7 @@ export const monitoringApi = {
         weeklyStudyHours = 8.0;
         doubtsThisWeek = 5;
         gapSeverity = 'MEDIUM';
-        scoreTrend = [74, 71, 68, 62, 63];
-        weakestSubject = 'Machine Learning Operations';
-        weakestTopic = 'Feature Engineering & Cross-Validation';
-        strongestSubject = 'SQL Queries';
+        if (studentExams.length === 0) scoreTrend = [74, 71, 68, 62, 63];
       } else if (s.studentId === 'CF-STU-0004') {
         // Top performer
         onlineStatus = 'STUDYING';
@@ -186,7 +219,7 @@ export const monitoringApi = {
         weeklyStudyHours = 22.4;
         doubtsThisWeek = 8;
         gapSeverity = 'LOW';
-        scoreTrend = [88, 90, 94, 91, 95];
+        if (studentExams.length === 0) scoreTrend = [88, 90, 94, 91, 95];
         weakestSubject = 'Current Affairs';
         weakestTopic = 'Global Economics';
         strongestSubject = 'Financial Reasoning';
@@ -196,7 +229,7 @@ export const monitoringApi = {
         weeklyStudyHours = 18.0;
         doubtsThisWeek = 6;
         gapSeverity = 'LOW';
-        scoreTrend = [78, 82, 84, 80, 86];
+        if (studentExams.length === 0) scoreTrend = [78, 82, 84, 80, 86];
       } else {
         onlineStatus = idx % 2 === 0 ? 'ONLINE' : 'AWAY';
         lastActive = idx % 2 === 0 ? 'Active now' : '45 mins ago';

@@ -2726,7 +2726,7 @@ const DEFAULT_SEED_TASKS: TaskAssignment[] = [
   },
 ];
 
-const getStoredAssignments = (): TaskAssignment[] => {
+export const getStoredAssignments = (): TaskAssignment[] => {
   try {
     const raw = localStorage.getItem('cf_stored_assignments');
     if (raw) {
