@@ -2,19 +2,32 @@ import json
 from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from database import get_db_connection
 
 router = APIRouter(prefix="/api/v1/teachers", tags=["Teacher Management"])
 
 class CreateTeacherPayload(BaseModel):
     name: str
-    email: EmailStr
+    email: str
     phone: Optional[str] = ""
     assignedBatches: Optional[List[str]] = []
     assignedCourses: Optional[List[str]] = []
     specialization: Optional[str] = "General Curriculum"
     password: Optional[str] = "Teacher@2026"
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def clean_email(cls, v: str) -> str:
+        if isinstance(v, str):
+            v = v.strip().lower()
+            if "@" in v:
+                parts = v.split("@")
+                if len(parts) == 2 and "." not in parts[1]:
+                    v = f"{parts[0]}@{parts[1]}.com"
+            if "@" not in v or "." not in v:
+                raise ValueError("Please provide a valid email address with a domain (e.g. name@gmail.com).")
+        return v
 
 class UpdateTeacherBatchesPayload(BaseModel):
     assignedBatches: List[str]

@@ -2,7 +2,7 @@ import json
 from datetime import datetime, date
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Query, Header
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from database import get_db_connection
 
 router = APIRouter(prefix="/api/v1/students", tags=["Students & Progress Card"])
@@ -38,7 +38,7 @@ def student_row_to_dict(r) -> dict:
 
 class StudentCreatePayload(BaseModel):
     name: str
-    email: EmailStr
+    email: str
     phone: str
     courseId: str
     batchId: Optional[str] = "batch-01"
@@ -54,6 +54,19 @@ class StudentCreatePayload(BaseModel):
     googleSheetUrl: Optional[str] = None
     googleSheetStatus: Optional[str] = "CONNECTED"
     password: Optional[str] = "student123"
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def clean_email(cls, v: str) -> str:
+        if isinstance(v, str):
+            v = v.strip().lower()
+            if "@" in v:
+                parts = v.split("@")
+                if len(parts) == 2 and "." not in parts[1]:
+                    v = f"{parts[0]}@{parts[1]}.com"
+            if "@" not in v or "." not in v:
+                raise ValueError("Please provide a valid full email address with a domain (e.g. name@gmail.com).")
+        return v
 
 class StudentUpdatePayload(BaseModel):
     name: Optional[str] = None
@@ -72,6 +85,17 @@ class StudentUpdatePayload(BaseModel):
     googleSheetUrl: Optional[str] = None
     googleSheetStatus: Optional[str] = None
     password: Optional[str] = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def clean_email(cls, v: Optional[str]) -> Optional[str]:
+        if isinstance(v, str):
+            v = v.strip().lower()
+            if "@" in v:
+                parts = v.split("@")
+                if len(parts) == 2 and "." not in parts[1]:
+                    v = f"{parts[0]}@{parts[1]}.com"
+        return v
 
 @router.get("")
 def get_students(

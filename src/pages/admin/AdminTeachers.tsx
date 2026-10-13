@@ -63,9 +63,17 @@ export const AdminTeachers: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      let cleanEmail = email.trim();
+      if (cleanEmail.includes('@')) {
+        const afterAt = cleanEmail.split('@')[1];
+        if (afterAt && !afterAt.includes('.')) {
+          cleanEmail = `${cleanEmail}.com`;
+        }
+      }
+
       await teachersApi.createTeacher({
         name: name.trim(),
-        email: email.trim(),
+        email: cleanEmail,
         phone: phone.trim(),
         specialization,
         assignedBatches,
@@ -77,8 +85,17 @@ export const AdminTeachers: React.FC = () => {
       setEmail('');
       setPhone('');
       await fetchData();
-    } catch {
-      addNotification('error', 'Failed to create faculty member.');
+    } catch (err: any) {
+      let msg = 'Failed to create faculty member.';
+      const detail = err?.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        msg = detail.map((d: any) => d.msg || d.message).join(' | ');
+      } else if (typeof detail === 'string') {
+        msg = detail;
+      } else if (err?.message) {
+        msg = err.message;
+      }
+      addNotification('error', msg);
     } finally {
       setIsSubmitting(false);
     }

@@ -184,6 +184,19 @@ export const AdminStudents: React.FC = () => {
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      let cleanEmail = formData.email.trim();
+      if (cleanEmail.includes('@')) {
+        const afterAt = cleanEmail.split('@')[1];
+        if (afterAt && !afterAt.includes('.')) {
+          cleanEmail = `${cleanEmail}.com`;
+        }
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        addNotification('warning', 'Please provide a complete email address with a domain (e.g. name@gmail.com).');
+        return;
+      }
+
       const selectedCourse = courses.find((c) => c.id === formData.courseId) || courses[0];
       const selectedBatch = batches.find((b) => b.id === formData.batchId) || batches[0];
       const courseId = formData.courseId || selectedCourse?.id || 'crs-01';
@@ -192,6 +205,7 @@ export const AdminStudents: React.FC = () => {
       if (editingStudentId) {
         await studentApi.update(editingStudentId, {
           ...formData,
+          email: cleanEmail,
           courseId,
           batchId,
           courseName: selectedCourse?.name || 'General Program',
@@ -202,6 +216,7 @@ export const AdminStudents: React.FC = () => {
       } else {
         await studentApi.create({
           ...formData,
+          email: cleanEmail,
           courseId,
           batchId,
           password: formData.password.trim() || 'student123',
@@ -229,8 +244,16 @@ export const AdminStudents: React.FC = () => {
       // Refresh list without crashing if network has delay
       fetchAll().catch(() => {});
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || 'Error saving student record.';
-      addNotification('error', typeof msg === 'string' ? msg : JSON.stringify(msg));
+      let msg = 'Error saving student record.';
+      const detail = err?.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        msg = detail.map((d: any) => d.msg || d.message).join(' | ');
+      } else if (typeof detail === 'string') {
+        msg = detail;
+      } else if (err?.message) {
+        msg = err.message;
+      }
+      addNotification('error', msg);
     }
   };
 
